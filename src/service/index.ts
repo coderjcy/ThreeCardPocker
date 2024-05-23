@@ -13,6 +13,9 @@ class Request {
     this.instance.interceptors.request.use(
       (config) => {
         // 拦截正确
+
+        config.headers.Authorization = localStorage.getItem('token')
+
         return config
       },
       (err) => {
@@ -65,19 +68,7 @@ class Request {
   put(config: AxiosRequestConfig) {}
 }
 
-new Request({
-  baseURL: 'http://localhost:8000',
-  timeout: 60000,
-  headers: {
-    Authorization: localStorage.getItem('token')
-  }
-})
-// export default request
-
 export default new Request({
   baseURL: 'http://localhost:8000',
-  timeout: 60000,
-  headers: {
-    Authorization: localStorage.getItem('token')
-  }
+  timeout: 60000
 })

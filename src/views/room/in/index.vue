@@ -20,29 +20,40 @@
       </div>
     </div>
     <div v-else class="screen">
-      <div class="player-1">
+      <div class="player-1" v-if="otherData[0]">
+        <div v-if="otherData[0].remain > -1">倒计时:{{ otherData[0].remain }}</div>
         <img class="card" src="@/assets/imgs/backface.jpg" />
         <img class="card" src="@/assets/imgs/backface.jpg" />
         <img class="card" src="@/assets/imgs/backface.jpg" />
         <div>用户:{{ otherData[0].name }}</div>
         <div>余额:{{ otherData[0].balance }}</div>
       </div>
-      <div class="player-2">
+      <div class="player-2" v-if="otherData[1]">
         <img class="card" src="@/assets/imgs/backface.jpg" />
         <img class="card" src="@/assets/imgs/backface.jpg" />
         <img class="card" src="@/assets/imgs/backface.jpg" />
         <div>用户:{{ otherData[1].name }}</div>
         <div>余额:{{ otherData[1].balance }}</div>
+        <div v-if="otherData[1].remain > -1">倒计时:{{ otherData[1].remain }}</div>
       </div>
       <div class="me">
-        <img
-          class="card"
-          v-for="i in myselfData.cards"
-          :src="dynamicImageUrl(i.suitLabel, i.label)"
-          :key="i.label + i.suitLabel"
-        />
+        <template v-if="myselfData.isBlind">
+          <img class="card" src="@/assets/imgs/backface.jpg" />
+          <img class="card" src="@/assets/imgs/backface.jpg" />
+          <img class="card" src="@/assets/imgs/backface.jpg" />
+        </template>
+        <template v-else>
+          <img
+            class="card"
+            v-for="i in myselfData.cards"
+            :src="dynamicImageUrl(i.suitLabel, i.label)"
+            :key="i.label + i.suitLabel"
+          />
+        </template>
       </div>
-      <div class="handler">
+
+      <div class="handler" v-if="myselfData.remain > -1">
+        <div>倒计时:{{ myselfData.remain }}</div>
         <el-button @click="handleFollowBet">跟注</el-button>
         <el-button @click="handleAddBet">下注</el-button>
         <el-button @click="handleAbandon">放弃</el-button>
@@ -94,7 +105,13 @@ const handleMessage = (e: any) => {
     myselfData.value = res.data.self
     otherData.value = res.data.other
   } else if (res.data.type === 'countdown') {
-    console.log(`output->res`, res)
+    if (myselfData.value.id === res.data.userId) return (myselfData.value.remain = res.data.remain)
+    let player: any = null
+    otherData.value.forEach((i) => {
+      if (i.id === res.data.userId) player = i
+      else i.remain = -1
+    })
+    if (player) player.remain = res.data.remain
   } else if (res.code === -1007) {
     router.push('/room/list')
   }
@@ -113,7 +130,7 @@ onUnmounted(() => {
 const handleToggleState = () => {
   ws.send(
     JSON.stringify({
-      isReady: !isReady.value
+      key: 'toggle-is-ready'
     })
   )
 }
@@ -180,20 +197,28 @@ const handleShowPocker = () => {
 .screen {
   width: 600px;
   height: 300px;
-  background-color: red;
-  position: relative;
+
+  background: url(@/assets/imgs/desk.jpg);
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
   .player-1 {
-    left: 20px;
+    left: 30px;
   }
   .player-2 {
-    right: 20px;
+    right: 30px;
   }
   .player-1,
   .player-2 {
     position: absolute;
-    top: 20px;
+    top: 30px;
     .card {
       width: 50px;
+      border-radius: 3px;
+      &:nth-child(n + 1) {
+        margin-left: 2px;
+      }
     }
   }
   .me {
@@ -201,6 +226,7 @@ const handleShowPocker = () => {
     bottom: 0px;
     left: 50%;
     transform: translateX(-50%);
+
     .card {
       width: 70px;
     }

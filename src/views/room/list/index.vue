@@ -24,6 +24,7 @@ const router = useRouter()
 
 const roomList = ref<IRoomType[]>([])
 const getRoomList = () => {
+  console.log(localStorage.setItem('xx', '123'))
   queryRoomList().then((res: any) => {
     roomList.value = res
   })
