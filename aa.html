@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+  <head>
+    <title>AudioWorkletNode 示例</title>
+  </head>
+  <body>
+    <script>
+      // 获取用户媒体设备的音频流
+      navigator.mediaDevices
+        .getUserMedia({ audio: true })
+        .then(function (stream) {
+          // 创建音频上下文
+          const audioContext = new AudioContext()
+
+          // 创建MediaStreamAudioSourceNode，用于将音频流连接到音频图中
+          const sourceNode = audioContext.createMediaStreamSource(stream)
+
+          // 创建ScriptProcessorNode，指定缓冲区大小和输入输出声道数
+          const scriptNode = audioContext.createScriptProcessor(4096, 1, 1)
+
+          // 连接节点
+          sourceNode.connect(scriptNode)
+          scriptNode.connect(audioContext.destination)
+
+          // 监听音频数据的回调函数
+          scriptNode.onaudioprocess = function (audioProcessingEvent) {
+            // 获取输入缓冲区
+            const inputBuffer = audioProcessingEvent.inputBuffer
+
+            // 获取输出缓冲区
+            const outputBuffer = audioProcessingEvent.outputBuffer
+
+            // 处理音频数据
+            for (let channel = 0; channel < outputBuffer.numberOfChannels; channel++) {
+              const inputData = inputBuffer.getChannelData(channel)
+              const outputData = outputBuffer.getChannelData(channel)
+
+              // 在这里对音频数据进行处理
+              // 例如，可以对输入数据应用音效、应用实时可视化等等
+
+              // 将处理后的数据复制到输出缓冲区
+              for (let sample = 0; sample < inputBuffer.length; sample++) {
+                outputData[sample] = inputData[sample]
+              }
+            }
+          }
+        })
+        .catch(function (error) {
+          console.log('获取音频流失败：', error)
+        })
+    </script>
+  </body>
+</html>

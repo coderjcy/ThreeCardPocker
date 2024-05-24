@@ -72,6 +72,7 @@ const closeGame = (message: any) => {
   .player-2 {
     position: absolute;
     top: 20px;
+
     .card {
       width: 50px;
     }
