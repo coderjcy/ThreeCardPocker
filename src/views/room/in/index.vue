@@ -21,22 +21,56 @@
     </div>
     <div v-else class="screen">
       <div class="player-1" v-if="otherData[0]">
-        <img class="card" src="@/assets/imgs/backface.jpg" />
-        <img class="card" src="@/assets/imgs/backface.jpg" />
-        <img class="card" src="@/assets/imgs/backface.jpg" />
+        <template v-if="competitors[otherData[0].id]">
+          <img
+            class="card"
+            v-for="i in competitors[otherData[0].id].cards"
+            :src="dynamicImageUrl(i.suitLabel, i.label)"
+            :key="i.label + i.suitLabel"
+          />
+        </template>
+        <template v-else>
+          <img class="card" src="@/assets/imgs/backface.jpg" />
+          <img class="card" src="@/assets/imgs/backface.jpg" />
+          <img class="card" src="@/assets/imgs/backface.jpg" />
+        </template>
         <div>用户:{{ otherData[0].name }}</div>
         <div>余额:{{ otherData[0].balance }}</div>
+        <div>投注:{{ otherData[0].chip }}</div>
         <div v-if="!otherData[0].isBlind" class="state">已看牌</div>
+        <div v-if="otherData[0].isAbandon" class="state abandon">已放弃</div>
         <div v-if="otherData[0].remain > -1">倒计时:{{ otherData[0].remain }}</div>
+        <el-button
+          v-if="!otherData[0].isAbandon && myselfData.remain > -1"
+          @click="handleComparePocker(otherData[0].id)"
+          >比牌</el-button
+        >
       </div>
-      <div v-if="otherData[1]" class="player-2">
-        <img class="card" src="@/assets/imgs/backface.jpg" />
-        <img class="card" src="@/assets/imgs/backface.jpg" />
-        <img class="card" src="@/assets/imgs/backface.jpg" />
+      <div class="player-2" v-if="otherData[1]">
+        <template v-if="competitors[otherData[1].id]">
+          <img
+            class="card"
+            v-for="i in competitors[otherData[1].id].cards"
+            :src="dynamicImageUrl(i.suitLabel, i.label)"
+            :key="i.label + i.suitLabel"
+          />
+        </template>
+        <template v-else>
+          <img class="card" src="@/assets/imgs/backface.jpg" />
+          <img class="card" src="@/assets/imgs/backface.jpg" />
+          <img class="card" src="@/assets/imgs/backface.jpg" />
+        </template>
         <div>用户:{{ otherData[1].name }}</div>
         <div>余额:{{ otherData[1].balance }}</div>
+        <div>投注:{{ otherData[1].chip }}</div>
         <div v-if="!otherData[1].isBlind" class="state">已看牌</div>
+        <div v-if="otherData[1].isAbandon" class="state">已放弃</div>
         <div v-if="otherData[1].remain > -1">倒计时:{{ otherData[1].remain }}</div>
+        <el-button
+          v-if="!otherData[1].isAbandon && myselfData.remain > -1"
+          @click="handleComparePocker(otherData[1].id)"
+          >比牌</el-button
+        >
       </div>
       <div class="me">
         <template v-if="myselfData.isBlind">
@@ -52,6 +86,7 @@
             :key="i.label + i.suitLabel"
           />
         </template>
+        <div v-if="myselfData.isAbandon" class="state">已放弃</div>
       </div>
 
       <div class="handler" v-if="myselfData.remain > -1">
@@ -61,6 +96,10 @@
         <el-button @click="handleAbandon">放弃</el-button>
         <el-button @click="handleShowPocker">看牌</el-button>
       </div>
+    </div>
+    <div>
+      <el-input v-model="message"></el-input>
+      <el-button @click="handleSendMessage"></el-button>
     </div>
   </div>
 </template>
@@ -79,6 +118,8 @@ const isReady = ref(false)
 const isPlaying = ref(false)
 const myselfData = ref<any>({})
 const otherData = ref<any[]>([])
+const competitors = ref<any>({})
+const message = ref('')
 let ws: any
 let timer: any
 type notifyType = 'success' | 'warning' | 'error' | 'info'
@@ -86,7 +127,7 @@ const enterRoom = () => {
   ws = new WebSocket('ws://localhost:8000?token=' + token + '&roomId=' + roomId)
 
   ws.onopen = () => {
-    console.log(`成功进入房间`)
+    ElMessage.success('成功进入房间')
     timer = setInterval(() => {
       ws.send(JSON.stringify('ping'))
     }, 1000)
@@ -95,8 +136,10 @@ const enterRoom = () => {
 }
 const handleMessage = (e: any) => {
   const res = JSON.parse(e.data)
-
-  if (res.data.type === 'update-chatting-records') {
+  if (res === 'pong') return
+  else if (res.code === -1007) {
+    router.push('/room/list')
+  } else if (res.data.type === 'update-chatting-records') {
     messageList.value = res.data.chattingRecords
   } else if (res.data.type === 'update-player-list') {
     playerList.value = res.data.playerList
@@ -119,12 +162,26 @@ const handleMessage = (e: any) => {
       else i.remain = -1
     })
     if (player) player.remain = res.data.remain
-  } else if (res.code === -1007) {
-    router.push('/room/list')
+  } else if (res.data.type === 'compare-pocker') {
+    competitors.value[res.data.competitor.id] = res.data.competitor
+    console.log(`output `, 111, res.data.competitor)
+    console.log(`output `, 222, competitors.value)
   }
+}
+const handleSendMessage = () => {
+  ws.send(
+    JSON.stringify({
+      key: 'player-message',
+      data: message.value
+    })
+  )
+  message.value = ''
 }
 const dynamicImageUrl = (suit: any, label: any) => {
   return `/src/assets/imgs/${suit + label}.jpg`
+}
+const handleComparePocker = (playerId: number) => {
+  ws.send(JSON.stringify({ key: 'compare-pocker', playerId }))
 }
 onMounted(() => {
   enterRoom()
@@ -229,18 +286,6 @@ const handleShowPocker = () => {
         margin-left: 2px;
       }
     }
-    .state {
-      position: absolute;
-      top: 15px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 20px;
-      color: #e62962;
-      background: rgba(64, 64, 64, 0.6);
-      border-radius: 3px;
-      padding: 5px 10px;
-      white-space: nowrap;
-    }
   }
   .me {
     position: absolute;
@@ -252,7 +297,18 @@ const handleShowPocker = () => {
       width: 70px;
     }
   }
-
+  .state {
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 20px;
+    color: #e62962;
+    background: rgba(64, 64, 64, 0.6);
+    border-radius: 3px;
+    padding: 5px 10px;
+    white-space: nowrap;
+  }
   .handler {
     position: absolute;
     bottom: 150px;

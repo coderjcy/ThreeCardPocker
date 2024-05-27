@@ -3,7 +3,7 @@
     <el-button @click="handleCreateRoom">创建房间</el-button>
     <div class="rooms">
       <div class="room" v-for="item in roomList" :key="item.id">
-        {{ item.name }}({{ item.playerList.length }}人)
+        {{ item.name }}({{ item.playerList.length }} / {{ item.max }} 人)
         <el-button @click="$router.push('/room/in/' + item.id)">进入房间</el-button>
       </div>
     </div>
@@ -19,12 +19,12 @@ interface IRoomType {
   id: number
   name: string
   playerList: any[]
+  max: number
 }
 const router = useRouter()
 
 const roomList = ref<IRoomType[]>([])
 const getRoomList = () => {
-  console.log(localStorage.setItem('xx', '123'))
   queryRoomList().then((res: any) => {
     roomList.value = res
   })
