@@ -34,7 +34,7 @@ const handleCreateRoom = () => {
   createRoom().then((res: any) => {
     ElMessage.success('创建成功')
     getRoomList()
-    // router.push('/room/in/' + res.roomId)
+    router.push('/room/in/' + res.roomId)
   })
 }
 let timer: number

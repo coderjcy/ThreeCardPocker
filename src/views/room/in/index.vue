@@ -1,5 +1,7 @@
 <template>
   <div>
+    <div>筹码池：{{ chipPool }}</div>
+    <div>当前最小下注筹码：{{ currentChipMin }}</div>
     <div v-if="!isPlaying">
       <div class="users">
         <div class="user" v-for="(user, index) in playerList" :key="index">
@@ -86,21 +88,26 @@
             :key="i.label + i.suitLabel"
           />
         </template>
+
+        <div>用户:{{ myselfData.name }}</div>
+        <div>余额:{{ myselfData.balance }}</div>
+        <div>投注:{{ myselfData.chip }}</div>
+
         <div v-if="myselfData.isAbandon" class="state">已放弃</div>
       </div>
 
       <div class="handler" v-if="myselfData.remain > -1">
         <div>倒计时:{{ myselfData.remain }}</div>
         <el-button @click="handleFollowBet">跟注</el-button>
-        <el-button @click="handleAddBet">下注</el-button>
+        <el-button @click="handleAddBet">下注(+5)</el-button>
         <el-button @click="handleAbandon">放弃</el-button>
         <el-button @click="handleShowPocker">看牌</el-button>
       </div>
     </div>
-    <div>
+    <!-- <div>
       <el-input v-model="message"></el-input>
       <el-button @click="handleSendMessage"></el-button>
-    </div>
+    </div> -->
   </div>
 </template>
 <script setup lang="ts">
@@ -115,11 +122,14 @@ const playerList = ref<any[]>([])
 const messageList = ref<any[]>([])
 const isCreator = ref(false)
 const isReady = ref(false)
+const chipPool = ref(0)
+const currentChipMin = ref(0)
 const isPlaying = ref(false)
 const myselfData = ref<any>({})
 const otherData = ref<any[]>([])
 const competitors = ref<any>({})
 const message = ref('')
+let bgm: any
 let ws: any
 let timer: any
 type notifyType = 'success' | 'warning' | 'error' | 'info'
@@ -154,6 +164,10 @@ const handleMessage = (e: any) => {
   } else if (res.data.type === 'update-game-data') {
     myselfData.value = res.data.self
     otherData.value = res.data.other
+    chipPool.value = res.data.chipPool
+    currentChipMin.value = res.data.currentChipMin
+
+    currentChipMin
   } else if (res.data.type === 'countdown') {
     if (myselfData.value.id === res.data.userId) return (myselfData.value.remain = res.data.remain)
     let player: any = null
@@ -164,8 +178,6 @@ const handleMessage = (e: any) => {
     if (player) player.remain = res.data.remain
   } else if (res.data.type === 'compare-pocker') {
     competitors.value[res.data.competitor.id] = res.data.competitor
-    console.log(`output `, 111, res.data.competitor)
-    console.log(`output `, 222, competitors.value)
   }
 }
 const handleSendMessage = () => {
@@ -185,10 +197,12 @@ const handleComparePocker = (playerId: number) => {
 }
 onMounted(() => {
   enterRoom()
+  playBGM()
 })
 onUnmounted(() => {
   ws && ws.close()
   timer && clearInterval(timer)
+  bgm && stopBGM()
 })
 
 // 切换准备状态
@@ -244,8 +258,14 @@ const handleShowPocker = () => {
     })
   )
 }
-
-// const handleCompare = () => {}
+const playBGM = () => {
+  bgm = new Audio('/src/assets/mp3/bgm.mp3')
+  bgm.loop = true // 设置循环播放
+  bgm.play() // 播放音频
+}
+const stopBGM = () => {
+  bgm.pause()
+}
 </script>
 <style lang="less" scoped>
 .users {
