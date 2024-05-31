@@ -92,7 +92,7 @@
 
     <!-- 房间信息 -->
     <div class="room-info">
-      <!-- <div>房间号: {{ roomId }}</div> -->
+      <div>房间号: {{ roomId }}</div>
       <div>底注: {{ 1 }}</div>
       <div>总注: {{ chipPool }}</div>
     </div>
@@ -163,6 +163,13 @@ const roomInfo = ref({
   baseChip: 1
 })
 const chipCoinList = computed(() => {
+  // const preIsBlind = otherData.value.find((i) => i.id === prePlayerId.value)?.isBlind
+  // const isNeedDouble = !myselfData.value.isBlind && preIsBlind
+  // if (currentChipMin.value === 5) return isNeedDouble ? [10, 20, 50] : [5, 10, 20, 50]
+  // else if (currentChipMin.value === 10) return isNeedDouble ? [20, 50] : [10, 20, 50]
+  // else if (currentChipMin.value === 20) return isNeedDouble ? [50] : [20, 50]
+  // else if (currentChipMin.value === 50) return [50]
+  // else return isNeedDouble ? [5, 10, 20, 50] : [1, 5, 10, 20, 50]
   if (currentChipMin.value === 5) return [10, 20, 50]
   else if (currentChipMin.value === 10) return [20, 50]
   else if (currentChipMin.value === 20) return [50]
@@ -177,7 +184,7 @@ type notifyType = 'success' | 'warning' | 'error' | 'info'
 
 // 进入房间，初始化websocket
 const enterRoom = () => {
-  ws = new WebSocket(`${import.meta.env.VITE_APP_SOCKET_URL}?token=${token}&roomId=${roomId}`)
+  ws = new WebSocket('ws://localhost:8000?token=' + token + '&roomId=' + roomId)
 
   ws.onopen = () => {
     ElMessage.success('成功进入房间')
@@ -331,24 +338,6 @@ const stopBGM = () => {
 }
 
 // 添加筹码到筹码池
-// const addChipInDesk = (playerId: number, chip: number) => {
-//   const userEl = playerRefs.value[playerId]
-//   const chipEL = document.createElement('img')
-//   chipEL.src = '/src/assets/imgs/chips/chip-' + chip + '.png'
-//   chipEL.setAttribute('class', 'chip-coin')
-//   const rect1 = userEl.getBoundingClientRect()
-//   const rect2 = chipDeskEl.value.getBoundingClientRect()
-
-//   chipEL.style.top = rect1.top - rect2.top + 'px'
-//   chipEL.style.left = rect1.left - rect2.left + 'px'
-//   chipDeskEl.value.appendChild(chipEL)
-
-//   requestAnimationFrame(() => {
-//     chipEL.style.top = Math.random() * rect2.height + 'px'
-//     chipEL.style.left = Math.random() * rect2.width + 'px'
-//   })
-// }
-
 const addChipInDesk = (playerId: number, chip: number) => {
   const userEl = playerRefs.value[playerId]
   const chipEL = document.createElement('img')
@@ -380,15 +369,12 @@ onUnmounted(() => {
 .screen {
   width: 100%;
   height: 100%;
-  // width: 100vh;
-  // height: 100vw;
-  // transform: rotate(90deg) translateY(-100vw);
-  // transform-origin: top left;
-  overflow: hidden;
   background: url(@/assets/imgs/desk.jpg) no-repeat;
   background-size: cover;
-  position: relative;
-
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
   color: #fff;
 
   .users {
@@ -419,19 +405,11 @@ onUnmounted(() => {
         .pockers {
           position: relative;
           margin-right: 10px;
-
           .pocker {
             width: 50px;
             border-radius: 3px;
-            position: relative;
-            z-index: 10;
-            &:nth-child(1) {
-              margin-right: -25px;
-              z-index: 8;
-            }
-            &:nth-child(2) {
-              margin-right: -25px;
-              z-index: 9;
+            &:nth-child(n + 1) {
+              margin-left: 2px;
             }
           }
           .state {
@@ -444,7 +422,6 @@ onUnmounted(() => {
             border-radius: 3px;
             padding: 5px 10px;
             white-space: nowrap;
-            z-index: 20;
             &.view {
               color: #00ff77;
             }
@@ -488,7 +465,6 @@ onUnmounted(() => {
   .countdown {
     animation: countdown 1s infinite linear;
     width: 60px;
-
     img {
       width: 60px;
       height: 60px;
@@ -512,6 +488,10 @@ onUnmounted(() => {
     }
   }
 
+  .room-info {
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+
   .handler {
     position: absolute;
     bottom: 20px;
@@ -527,22 +507,18 @@ onUnmounted(() => {
       background-color: #fffb00;
       margin-left: 10px;
     }
-    .countdown {
-      margin: 0 auto;
-      margin-bottom: 10px;
-    }
   }
 
   .room-info {
     position: absolute;
     top: 0;
     left: 0;
-    background-color: rgba(0, 0, 0, 0.5);
+    width: 216px;
+    height: 90px;
     line-height: 30px;
-    padding: 5px 10px;
+    padding-left: 10px;
     border-radius: 5px;
   }
-
   .chatting-records {
     position: absolute;
     bottom: 80px;
@@ -569,18 +545,19 @@ onUnmounted(() => {
 
   .quit {
     position: absolute;
-    width: 30px;
+    width: 1.5625vw;
     height: 30px;
-    right: 20px;
-    top: 20px;
+    right: 10px;
+    top: 10px;
   }
 
   .chip-pool {
     position: absolute;
-    top: 70px;
-    bottom: 140px;
-    left: 120px;
-    right: 210px;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 500px;
+    height: 220px;
     z-index: 10;
   }
   :global(.chip-coin) {
