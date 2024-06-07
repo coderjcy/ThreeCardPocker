@@ -380,7 +380,7 @@ const addChipInDesk = (playerId: number, chip: number) => {
 }
 onMounted(() => {
   enterRoom()
-  // playBGM()
+  playBGM()
 })
 onUnmounted(() => {
   ws && ws.close()
