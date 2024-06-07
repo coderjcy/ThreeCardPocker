@@ -158,10 +158,17 @@ const message = ref('')
 const playerRefs = ref<any>({})
 const chipDeskEl = ref<any>(null)
 const prePlayerId = ref(undefined)
-
 const roomInfo = ref({
   baseChip: 1
 })
+const musics = {
+  bgm: new Audio('/src/assets/mp3/bgm.mp3'),
+  add: new Audio('/src/assets/mp3/add.mp3'),
+  follow: new Audio('/src/assets/mp3/follow.mp3'),
+  compare: new Audio('/src/assets/mp3/compare.mp3'),
+  abandon: new Audio('/src/assets/mp3/abandon.mp3'),
+  view: new Audio('/src/assets/mp3/view.mp3')
+}
 const chipCoinList = computed(() => {
   if (currentChipMin.value === 5) return [10, 20, 50]
   else if (currentChipMin.value === 10) return [20, 50]
@@ -169,7 +176,7 @@ const chipCoinList = computed(() => {
   else if (currentChipMin.value === 50) return [50]
   else return [5, 10, 20, 50]
 })
-let bgm: any
+
 let ws: any
 let timer: any
 
@@ -228,8 +235,22 @@ const handleMessage = (e: any) => {
     if (player) player.remain = res.data.remain
   } else if (res.data.type === 'compare-pocker') {
     competitors.value[res.data.competitor.id] = res.data.competitor
+    musics.compare.currentTime = 0
+    musics.compare.play()
   } else if (res.data.type === 'add-bet') {
     addChipInDesk(res.data.playerId, res.data.chip)
+    musics.add.currentTime = 0
+    musics.add.play()
+  } else if (res.data.type === 'follow-bet') {
+    addChipInDesk(res.data.playerId, res.data.chip)
+    musics.follow.currentTime = 0
+    musics.follow.play()
+  } else if (res.data.type === 'show-pocker') {
+    musics.view.currentTime = 0
+    musics.view.play()
+  } else if (res.data.type === 'abandon-bet') {
+    musics.abandon.currentTime = 0
+    musics.abandon.play()
   }
 }
 
@@ -320,35 +341,16 @@ const handleShowPocker = () => {
 
 // 播放背景音乐
 const playBGM = () => {
-  bgm = new Audio('/src/assets/mp3/bgm.mp3')
-  bgm.loop = true // 设置循环播放
-  bgm.play() // 播放音频
+  musics.bgm.loop = true // 设置循环播放
+  musics.bgm.play() // 播放音频
 }
 
 // 停止背景音乐
 const stopBGM = () => {
-  bgm.pause()
+  musics.bgm.pause()
 }
 
 // 添加筹码到筹码池
-// const addChipInDesk = (playerId: number, chip: number) => {
-//   const userEl = playerRefs.value[playerId]
-//   const chipEL = document.createElement('img')
-//   chipEL.src = '/src/assets/imgs/chips/chip-' + chip + '.png'
-//   chipEL.setAttribute('class', 'chip-coin')
-//   const rect1 = userEl.getBoundingClientRect()
-//   const rect2 = chipDeskEl.value.getBoundingClientRect()
-
-//   chipEL.style.top = rect1.top - rect2.top + 'px'
-//   chipEL.style.left = rect1.left - rect2.left + 'px'
-//   chipDeskEl.value.appendChild(chipEL)
-
-//   requestAnimationFrame(() => {
-//     chipEL.style.top = Math.random() * rect2.height + 'px'
-//     chipEL.style.left = Math.random() * rect2.width + 'px'
-//   })
-// }
-
 const addChipInDesk = (playerId: number, chip: number) => {
   const userEl = playerRefs.value[playerId]
   const chipEL = document.createElement('img')
@@ -357,13 +359,23 @@ const addChipInDesk = (playerId: number, chip: number) => {
   const rect1 = userEl.getBoundingClientRect()
   const rect2 = chipDeskEl.value.getBoundingClientRect()
 
-  chipEL.style.top = rect1.top - rect2.top + 'px'
-  chipEL.style.left = rect1.left - rect2.left + 'px'
+  let isLandscape = true
+  if (isLandscape) {
+    chipEL.style.top = rect2.width + rect2.left - rect1.left - rect1.width + 'px'
+    chipEL.style.left = rect1.top - rect2.top + 'px'
+  } else {
+    chipEL.style.top = rect1.top - rect2.top + 'px'
+    chipEL.style.left = rect1.left - rect2.left + 'px'
+  }
   chipDeskEl.value.appendChild(chipEL)
-
   requestAnimationFrame(() => {
-    chipEL.style.top = Math.random() * rect2.height + 'px'
-    chipEL.style.left = Math.random() * rect2.width + 'px'
+    if (isLandscape) {
+      chipEL.style.top = Math.random() * rect2.width + 'px'
+      chipEL.style.left = Math.random() * rect2.height + 'px'
+    } else {
+      chipEL.style.top = Math.random() * rect2.height + 'px'
+      chipEL.style.left = Math.random() * rect2.width + 'px'
+    }
   })
 }
 onMounted(() => {
@@ -373,22 +385,21 @@ onMounted(() => {
 onUnmounted(() => {
   ws && ws.close()
   timer && clearInterval(timer)
-  bgm && stopBGM()
+  stopBGM()
 })
 </script>
 <style lang="less" scoped>
 .screen {
-  width: 100%;
-  height: 100%;
-  // width: 100vh;
-  // height: 100vw;
-  // transform: rotate(90deg) translateY(-100vw);
-  // transform-origin: top left;
+  // width: 100%;
+  // height: 100%;
+  width: 100vh;
+  height: 100vw;
+  transform: rotate(90deg) translateY(-100vw);
+  transform-origin: top left;
   overflow: hidden;
   background: url(@/assets/imgs/desk.jpg) no-repeat;
   background-size: cover;
   position: relative;
-
   color: #fff;
 
   .users {

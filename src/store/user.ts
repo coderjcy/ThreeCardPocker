@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 
 interface IUserInfo {
   id: number
-  nickname: string
+  nickname?: string
   username: string
   token: string
 }
