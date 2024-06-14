@@ -9,7 +9,7 @@ lerna-debug.log*
 
 node_modules
 .DS_Store
-dist
+three-card-pocker
 dist-ssr
 coverage
 *.local

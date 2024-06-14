@@ -52,7 +52,9 @@
       </div>
 
       <div class="info" :ref="(el) => (playerRefs[myselfData.id] = el)">
-        <img :src="myselfData.avatar" alt="" />
+        <div :class="{ avatar: true, winner: myselfData.isWinner }">
+          <img :src="myselfData.avatar" alt="" />
+        </div>
         <div>
           <div>{{ myselfData.name }}</div>
           <div>总分:{{ myselfData.balance }} 投注:{{ myselfData.chip || 0 }}</div>
@@ -82,10 +84,9 @@
       </div>
     </div>
 
-    <!-- 开始游戏、准备、取消准备 -->
+    <!-- 准备、取消准备 -->
     <div v-if="roomState === 'waiting'" class="pre-game-handler">
-      <el-button v-if="isCreator" @click="handleStartGame" size="large">开始游戏</el-button>
-      <el-button v-else @click="handleToggleState" size="large">{{
+      <el-button @click="handleToggleState" size="large">{{
         isReady ? '取消准备' : '准备'
       }}</el-button>
     </div>
@@ -136,7 +137,7 @@
 import { ElMessage } from 'element-plus'
 import { onMounted, onUnmounted, ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-type IRoomType = 'waiting' | 'playing' | 'over'
+type IRoomType = 'waiting' | 'playing'
 const route = useRoute()
 const router = useRouter()
 const roomId = route.params.roomId
@@ -144,7 +145,7 @@ const token = localStorage.getItem('token')
 const playerList = ref<any[]>([])
 const messageList = ref<any[]>([])
 const isShowChatting = ref(false)
-const isCreator = ref(false)
+// const isCreator = ref(false)
 const isReady = ref(false)
 const isShowCompare = ref(false)
 const isShowSelectChip = ref(false)
@@ -157,17 +158,18 @@ const competitors = ref<any>({})
 const message = ref('')
 const playerRefs = ref<any>({})
 const chipDeskEl = ref<any>(null)
-const prePlayerId = ref(undefined)
+// const prePlayerId = ref(undefined)
 const roomInfo = ref({
   baseChip: 1
 })
+
 const musics = {
-  bgm: new Audio('/src/assets/mp3/bgm.mp3'),
-  add: new Audio('/src/assets/mp3/add.mp3'),
-  follow: new Audio('/src/assets/mp3/follow.mp3'),
-  compare: new Audio('/src/assets/mp3/compare.mp3'),
-  abandon: new Audio('/src/assets/mp3/abandon.mp3'),
-  view: new Audio('/src/assets/mp3/view.mp3')
+  bgm: new Audio('/mp3/bgm.mp3'),
+  add: new Audio('/mp3/add.mp3'),
+  follow: new Audio('/mp3/follow.mp3'),
+  compare: new Audio('/mp3/compare.mp3'),
+  abandon: new Audio('/mp3/abandon.mp3'),
+  view: new Audio('/mp3/view.mp3')
 }
 const chipCoinList = computed(() => {
   if (currentChipMin.value === 5) return [10, 20, 50]
@@ -205,26 +207,35 @@ const handleMessage = (e: any) => {
     messageList.value = res.data.chattingRecords
   } else if (res.data.type === 'update-player-list') {
     playerList.value = res.data.playerList
-  } else if (res.data.type === 'is-creator') {
-    isCreator.value = res.data.isCreator
-  } else if (res.data.type === 'toggle-is-ready') {
+  }
+  //  else if (res.data.type === 'is-creator') {
+  // isCreator.value = res.data.isCreator
+  // }
+  else if (res.data.type === 'toggle-is-ready') {
     isReady.value = res.data.isReady
   } else if (res.data.type === 'notify') {
     ElMessage[res.data.notifyType as notifyType](res.data.msg)
   } else if (res.data.type === 'toggle-room-state') {
     if (res.data.state === 'playing') {
       ElMessage.success('游戏开始')
+      // playBGM()
       otherData.value.forEach((i) => addChipInDesk(i.id, roomInfo.value.baseChip))
       addChipInDesk(myselfData.value.id, roomInfo.value.baseChip)
+      roomState.value = 'playing'
     }
-    if (res.data.state === 'over') ElMessage.error('游戏结束')
-    roomState.value = res.data.state
+    if (res.data.state === 'over') {
+      ElMessage.error('游戏结束')
+      stopBGM()
+      roomState.value = 'waiting'
+
+      while (chipDeskEl.value.firstChild) chipDeskEl.value.removeChild(chipDeskEl.value.firstChild)
+    }
   } else if (res.data.type === 'update-game-data') {
     myselfData.value = res.data.self
     otherData.value = res.data.other
     chipPool.value = res.data.chipPool
     currentChipMin.value = res.data.currentChipMin
-    prePlayerId.value = res.data.prePlayerId
+    // prePlayerId.value = res.data.prePlayerId
   } else if (res.data.type === 'countdown') {
     if (myselfData.value.id === res.data.userId) return (myselfData.value.remain = res.data.remain)
     let player: any = null
@@ -267,7 +278,7 @@ const handleSendMessage = () => {
 
 // 获取pocker的url
 const dynamicImageUrl = (suit: any, label: any) => {
-  return `/src/assets/imgs/${suit + label}.jpg`
+  return `/imgs/${suit + label}.jpg`
 }
 
 // 比牌
@@ -281,15 +292,6 @@ const handleToggleState = () => {
   ws.send(
     JSON.stringify({
       key: 'toggle-is-ready'
-    })
-  )
-}
-
-// 尝试开始游戏
-const handleStartGame = () => {
-  ws.send(
-    JSON.stringify({
-      key: 'start-game'
     })
   )
 }
@@ -316,7 +318,6 @@ const handleAddBet = (chip: number) => {
     })
   )
 }
-//
 // 跟注
 const handleFollowBet = () => {
   ws.send(
@@ -342,6 +343,7 @@ const handleShowPocker = () => {
 // 播放背景音乐
 const playBGM = () => {
   musics.bgm.loop = true // 设置循环播放
+  musics.bgm.currentTime = 0
   musics.bgm.play() // 播放音频
 }
 
@@ -354,7 +356,7 @@ const stopBGM = () => {
 const addChipInDesk = (playerId: number, chip: number) => {
   const userEl = playerRefs.value[playerId]
   const chipEL = document.createElement('img')
-  chipEL.src = '/src/assets/imgs/chips/chip-' + chip + '.png'
+  chipEL.src = '/imgs/chips/chip-' + chip + '.png'
   chipEL.setAttribute('class', 'chip-coin')
   const rect1 = userEl.getBoundingClientRect()
   const rect2 = chipDeskEl.value.getBoundingClientRect()
@@ -380,7 +382,6 @@ const addChipInDesk = (playerId: number, chip: number) => {
 }
 onMounted(() => {
   enterRoom()
-  playBGM()
 })
 onUnmounted(() => {
   ws && ws.close()
@@ -390,11 +391,11 @@ onUnmounted(() => {
 </script>
 <style lang="less" scoped>
 .screen {
-  // width: 100%;
-  // height: 100%;
-  width: 100vh;
-  height: 100vw;
-  transform: rotate(90deg) translateY(-100vw);
+  width: 100%;
+  height: 100%;
+  // transform: rotate(90deg) translateY(-100vw);
+  // width: 100vh;
+  // height: 100vw;
   transform-origin: top left;
   overflow: hidden;
   background: url(@/assets/imgs/desk.jpg) no-repeat;
@@ -488,10 +489,29 @@ onUnmounted(() => {
       display: flex;
       align-items: flex-end;
       margin-top: 20px;
-      img {
-        width: 50px;
-        margin-right: 5px;
-        border-radius: 5px;
+      .avatar {
+        position: relative;
+
+        img {
+          width: 50px;
+          margin-right: 5px;
+          border-radius: 5px;
+        }
+        &.winner::after {
+          content: '赢家';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #ffd700;
+          font-size: 32px;
+          white-space: nowrap;
+          text-shadow: 0 0 20px #ccc;
+        }
       }
     }
   }
