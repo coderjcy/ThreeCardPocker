@@ -12,15 +12,26 @@
 
             <el-button
               class="compare-btn"
-              v-if="!user.isAbandon && isShowCompare"
+              v-if="user.state === 'playing' && isShowCompare"
               @click="handleComparePocker(user.id)"
               >比牌</el-button
             >
 
             <div v-if="roomState === 'playing'" class="pockers">
-              <img class="pocker" v-for="i in 3" :key="i" src="@/assets/imgs/backface.jpg" />
+              <template v-if="user.cards.length">
+                <img
+                  class="pocker"
+                  v-for="i in user.cards"
+                  :src="dynamicImageUrl(i.suitLabel, i.label)"
+                  :key="i.label + i.suitLabel"
+                />
+              </template>
+              <template v-else>
+                <img class="pocker" v-for="i in 3" :key="i" src="@/assets/imgs/backface.jpg" />
+              </template>
+
               <div v-if="!user.isBlind" class="state view">已看牌</div>
-              <div v-if="user.isAbandon" class="state abandon">已放弃</div>
+              <div v-if="user.state === 'abandon'" class="state abandon">已放弃</div>
             </div>
             <div v-if="roomState === 'waiting'" class="ready-state">
               {{ user.isReady ? '已准备' : '未准备' }}
@@ -87,7 +98,7 @@
     <!-- 准备、取消准备 -->
     <div v-if="roomState === 'waiting'" class="pre-game-handler">
       <el-button @click="handleToggleState" size="large">{{
-        isReady ? '取消准备' : '准备'
+        myselfData.isReady ? '取消准备' : '准备'
       }}</el-button>
     </div>
 
@@ -146,7 +157,7 @@ const playerList = ref<any[]>([])
 const messageList = ref<any[]>([])
 const isShowChatting = ref(false)
 // const isCreator = ref(false)
-const isReady = ref(false)
+
 const isShowCompare = ref(false)
 const isShowSelectChip = ref(false)
 const roomState = ref<IRoomType>('waiting')
@@ -154,7 +165,6 @@ const chipPool = ref(0)
 const currentChipMin = ref(0)
 const myselfData = ref<any>({})
 const otherData = ref<any[]>([])
-const competitors = ref<any>({})
 const message = ref('')
 const playerRefs = ref<any>({})
 const chipDeskEl = ref<any>(null)
@@ -211,9 +221,7 @@ const handleMessage = (e: any) => {
   //  else if (res.data.type === 'is-creator') {
   // isCreator.value = res.data.isCreator
   // }
-  else if (res.data.type === 'toggle-is-ready') {
-    isReady.value = res.data.isReady
-  } else if (res.data.type === 'notify') {
+  else if (res.data.type === 'notify') {
     ElMessage[res.data.notifyType as notifyType](res.data.msg)
   } else if (res.data.type === 'toggle-room-state') {
     if (res.data.state === 'playing') {
@@ -245,7 +253,6 @@ const handleMessage = (e: any) => {
     })
     if (player) player.remain = res.data.remain
   } else if (res.data.type === 'compare-pocker') {
-    competitors.value[res.data.competitor.id] = res.data.competitor
     musics.compare.currentTime = 0
     musics.compare.play()
   } else if (res.data.type === 'add-bet') {
@@ -438,11 +445,11 @@ onUnmounted(() => {
             position: relative;
             z-index: 10;
             &:nth-child(1) {
-              margin-right: -25px;
+              margin-right: -30px;
               z-index: 8;
             }
             &:nth-child(2) {
-              margin-right: -25px;
+              margin-right: -30px;
               z-index: 9;
             }
           }
