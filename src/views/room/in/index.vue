@@ -3,7 +3,7 @@
     <!-- 对手信息 -->
     <div class="users">
       <template v-for="user in otherData" :key="user.id">
-        <div class="user">
+        <div :class="{ user: true, lose: user.state === 'lose', win: user.state === 'win' }">
           <div class="info">
             <div v-if="user.remain > -1" class="countdown">
               <div class="remain">{{ user.remain }}</div>
@@ -18,7 +18,7 @@
             >
 
             <div v-if="roomState === 'playing'" class="pockers">
-              <template v-if="user.cards.length">
+              <template v-if="user.cards?.length">
                 <img
                   class="pocker"
                   v-for="i in user.cards"
@@ -47,7 +47,10 @@
     </div>
 
     <!-- 我的信息 -->
-    <div class="myself" v-if="myselfData.id">
+    <div
+      v-if="myselfData.id"
+      :class="{ myself: true, lose: myselfData.state === 'lose', win: myselfData.state === 'win' }"
+    >
       <div class="pockers">
         <template v-if="myselfData.isBlind">
           <img class="pocker" v-for="i in 3" :key="i" src="@/assets/imgs/backface.jpg" />
@@ -63,7 +66,7 @@
       </div>
 
       <div class="info" :ref="(el) => (playerRefs[myselfData.id] = el)">
-        <div :class="{ avatar: true, winner: myselfData.isWinner }">
+        <div class="avatar">
           <img :src="myselfData.avatar" alt="" />
         </div>
         <div>
@@ -243,6 +246,8 @@ const handleMessage = (e: any) => {
     otherData.value = res.data.other
     chipPool.value = res.data.chipPool
     currentChipMin.value = res.data.currentChipMin
+
+    console.log(`output->1111,`, 1111, myselfData.value)
     // prePlayerId.value = res.data.prePlayerId
   } else if (res.data.type === 'countdown') {
     if (myselfData.value.id === res.data.userId) return (myselfData.value.remain = res.data.remain)
@@ -498,31 +503,32 @@ onUnmounted(() => {
       margin-top: 20px;
       .avatar {
         position: relative;
-
         img {
           width: 50px;
           margin-right: 5px;
           border-radius: 5px;
         }
-        &.winner::after {
-          content: '赢家';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #ffd700;
-          font-size: 32px;
-          white-space: nowrap;
-          text-shadow: 0 0 20px #ccc;
-        }
+      }
+      .win .avatar::after {
+        content: '赢家';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffd700;
+        font-size: 32px;
+        white-space: nowrap;
+        text-shadow: 0 0 20px #ccc;
       }
     }
   }
-
+  .lose {
+    filter: grayscale(100%);
+  }
   .countdown {
     animation: countdown 1s infinite linear;
     width: 60px;
