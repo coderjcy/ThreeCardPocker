@@ -26,7 +26,7 @@ class Request {
     )
     this.instance.interceptors.response.use(
       (res) => {
-        if (res.data.code === 200) return res.data.data
+        if (res.data.code === 200) return res.data
         return Promise.reject(res.data)
       },
       (err) => {

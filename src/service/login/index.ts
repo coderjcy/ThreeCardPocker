@@ -8,5 +8,6 @@ export function login(userInfo: any) {
   return request.post({
     url: '/login',
     data: userInfo
-  }) as Promise<ILoginRes>
+  })
+  // }) as Promise<ILoginRes>
 }

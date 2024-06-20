@@ -9,8 +9,11 @@ interface IUserInfo {
 }
 const useUserStore = defineStore('user', () => {
   const userInfo = ref<IUserInfo>()
-
-  return { userInfo }
+  const setupStore = () => {
+    const data = localStorage.getItem('userInfo')
+    userInfo.value = data ? JSON.parse(data) : {}
+  }
+  return { userInfo, setupStore }
 })
 
 export default useUserStore

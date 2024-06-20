@@ -46,9 +46,9 @@ const handleLogin = async (formRef: InstanceType<typeof ElForm>) => {
   const isPass = await formRef.validate((v: any) => v)
   if (!isPass) return
   const res = await login(userInfo)
-  localStorage.setItem('token', res.token)
-  localStorage.setItem('userInfo', JSON.stringify(res))
-  userStore.userInfo = res
+  localStorage.setItem('token', res.data.token)
+  localStorage.setItem('userInfo', JSON.stringify(res.data))
+  userStore.userInfo = res.data
   ElMessage.success('登录成功')
   router.push('/room/list')
 }

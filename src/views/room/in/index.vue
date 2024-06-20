@@ -3,7 +3,13 @@
     <!-- 对手信息 -->
     <div class="users">
       <template v-for="user in otherData" :key="user.id">
-        <div :class="{ user: true, lose: user.state === 'lose', win: user.state === 'win' }">
+        <div
+          :class="{
+            user: true,
+            lose: user.state === 'lose' || user.state === 'abandon',
+            win: user.state === 'win'
+          }"
+        >
           <div class="info">
             <div v-if="user.remain > -1" class="countdown">
               <div class="remain">{{ user.remain }}</div>
@@ -32,9 +38,10 @@
 
               <div v-if="!user.isBlind" class="state view">已看牌</div>
               <div v-if="user.state === 'abandon'" class="state abandon">已放弃</div>
+              <!-- <div v-if="user.state === 'lose'" class="state lose">已淘汰</div> -->
             </div>
             <div v-if="roomState === 'waiting'" class="ready-state">
-              {{ user.isReady ? '已准备' : '未准备' }}
+              {{ user.state === 'ready' ? '已准备' : '未准备' }}
             </div>
             <div :ref="(el) => (playerRefs[user.id] = el)">
               <img class="avatar" :src="user.avatar" alt="" />
@@ -49,9 +56,13 @@
     <!-- 我的信息 -->
     <div
       v-if="myselfData.id"
-      :class="{ myself: true, lose: myselfData.state === 'lose', win: myselfData.state === 'win' }"
+      :class="{
+        myself: true,
+        lose: myselfData.state === 'lose' || myselfData.state === 'abandon',
+        win: myselfData.state === 'win'
+      }"
     >
-      <div class="pockers">
+      <div class="pockers" v-if="roomState === 'playing'">
         <template v-if="myselfData.isBlind">
           <img class="pocker" v-for="i in 3" :key="i" src="@/assets/imgs/backface.jpg" />
         </template>
@@ -91,7 +102,11 @@
         <button class="btn" @click="handleAbandon">放弃</button>
         <button class="btn" @click="isShowCompare = true">比牌</button>
         <button class="btn" @click="handleShowPocker">看牌</button>
-        <button v-if="currentChipMin !== 50" class="btn" @click="isShowSelectChip = true">
+        <button
+          v-if="currentChipMin !== 50"
+          class="btn"
+          @click="isShowSelectChip = !isShowSelectChip"
+        >
           加注
         </button>
         <button class="btn" @click="handleFollowBet">跟注</button>
@@ -101,14 +116,14 @@
     <!-- 准备、取消准备 -->
     <div v-if="roomState === 'waiting'" class="pre-game-handler">
       <el-button @click="handleToggleState" size="large">{{
-        myselfData.isReady ? '取消准备' : '准备'
+        myselfData.state === 'ready' ? '取消准备' : '准备'
       }}</el-button>
     </div>
 
     <!-- 房间信息 -->
     <div class="room-info">
-      <!-- <div>房间号: {{ roomId }}</div> -->
-      <div>底注: {{ 1 }}</div>
+      <div>房间号: {{ roomInfo.id }}</div>
+      <div>底注: {{ roomInfo.baseChip }}</div>
       <div>总注: {{ chipPool }}</div>
     </div>
 
@@ -130,13 +145,16 @@
           <el-button @click="handleSendMessage">发送</el-button>
         </div>
       </div>
-      <!-- <el-scrollbar height="400px" >
-        <p v-for="item in 20" :key="item" class="scrollbar-demo-item">{{ item }}</p>
-      </el-scrollbar> -->
     </div>
     <!-- 筹码池 -->
     <div ref="chipDeskEl" class="chip-pool"></div>
-
+    <img
+      v-if="roomState === 'waiting'"
+      src="@/assets/imgs/dissolve.png"
+      class="dissolve"
+      @click="handleDissolveRoom"
+      alt="解散房间"
+    />
     <!-- 退出房间 -->
     <img
       v-if="roomState === 'waiting'"
@@ -149,17 +167,17 @@
 </template>
 <script setup lang="ts">
 import { ElMessage } from 'element-plus'
-import { onMounted, onUnmounted, ref, computed } from 'vue'
+import { onMounted, onUnmounted, ref, computed, getCurrentInstance } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { queryRoomInfo, dissolveRoom } from '@/service/room-list/index'
 type IRoomType = 'waiting' | 'playing'
 const route = useRoute()
 const router = useRouter()
-const roomId = route.params.roomId
+const roomId = route.params.roomId as string
 const token = localStorage.getItem('token')
-const playerList = ref<any[]>([])
+
 const messageList = ref<any[]>([])
 const isShowChatting = ref(false)
-// const isCreator = ref(false)
 
 const isShowCompare = ref(false)
 const isShowSelectChip = ref(false)
@@ -171,10 +189,6 @@ const otherData = ref<any[]>([])
 const message = ref('')
 const playerRefs = ref<any>({})
 const chipDeskEl = ref<any>(null)
-// const prePlayerId = ref(undefined)
-const roomInfo = ref({
-  baseChip: 1
-})
 
 const musics = {
   bgm: new Audio('/mp3/bgm.mp3'),
@@ -218,13 +232,7 @@ const handleMessage = (e: any) => {
     router.push('/room/list')
   } else if (res.data.type === 'update-chatting-records') {
     messageList.value = res.data.chattingRecords
-  } else if (res.data.type === 'update-player-list') {
-    playerList.value = res.data.playerList
-  }
-  //  else if (res.data.type === 'is-creator') {
-  // isCreator.value = res.data.isCreator
-  // }
-  else if (res.data.type === 'notify') {
+  } else if (res.data.type === 'notify') {
     ElMessage[res.data.notifyType as notifyType](res.data.msg)
   } else if (res.data.type === 'toggle-room-state') {
     if (res.data.state === 'playing') {
@@ -238,7 +246,6 @@ const handleMessage = (e: any) => {
       ElMessage.error('游戏结束')
       stopBGM()
       roomState.value = 'waiting'
-
       while (chipDeskEl.value.firstChild) chipDeskEl.value.removeChild(chipDeskEl.value.firstChild)
     }
   } else if (res.data.type === 'update-game-data') {
@@ -246,9 +253,6 @@ const handleMessage = (e: any) => {
     otherData.value = res.data.other
     chipPool.value = res.data.chipPool
     currentChipMin.value = res.data.currentChipMin
-
-    console.log(`output->1111,`, 1111, myselfData.value)
-    // prePlayerId.value = res.data.prePlayerId
   } else if (res.data.type === 'countdown') {
     if (myselfData.value.id === res.data.userId) return (myselfData.value.remain = res.data.remain)
     let player: any = null
@@ -319,10 +323,10 @@ const handleAbandon = () => {
   isShowSelectChip.value = false
 }
 
-// 下注
+// 加注
 const handleAddBet = (chip: number) => {
   isShowCompare.value = false
-
+  isShowSelectChip.value = false
   ws.send(
     JSON.stringify({
       key: 'add-bet',
@@ -332,13 +336,13 @@ const handleAddBet = (chip: number) => {
 }
 // 跟注
 const handleFollowBet = () => {
+  isShowCompare.value = false
+  isShowSelectChip.value = false
   ws.send(
     JSON.stringify({
       key: 'follow-bet'
     })
   )
-  isShowCompare.value = false
-  isShowSelectChip.value = false
 }
 
 // 看牌
@@ -363,7 +367,17 @@ const playBGM = () => {
 const stopBGM = () => {
   musics.bgm.pause()
 }
-
+const proxy = getCurrentInstance()!.proxy
+// 解散房间
+const handleDissolveRoom = () => {
+  ;(proxy as any)
+    .$confirm('确定要解散房间吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消'
+    })
+    .then(() => dissolveRoom(roomId).then(() => router.push('/room/list')))
+    .catch(() => {})
+}
 // 添加筹码到筹码池
 const addChipInDesk = (playerId: number, chip: number) => {
   const userEl = playerRefs.value[playerId]
@@ -373,7 +387,7 @@ const addChipInDesk = (playerId: number, chip: number) => {
   const rect1 = userEl.getBoundingClientRect()
   const rect2 = chipDeskEl.value.getBoundingClientRect()
 
-  let isLandscape = true
+  let isLandscape = false
   if (isLandscape) {
     chipEL.style.top = rect2.width + rect2.left - rect1.left - rect1.width + 'px'
     chipEL.style.left = rect1.top - rect2.top + 'px'
@@ -392,8 +406,20 @@ const addChipInDesk = (playerId: number, chip: number) => {
     }
   })
 }
+const roomInfo = ref({
+  id: undefined,
+  name: undefined,
+  state: undefined,
+  baseChip: 0,
+  playerNumber: 0,
+  roundCount: 0
+})
 onMounted(() => {
   enterRoom()
+  queryRoomInfo(roomId).then((res: any) => {
+    roomInfo.value = res.data
+    roomState.value = res.data.state
+  })
 })
 onUnmounted(() => {
   ws && ws.close()
@@ -581,6 +607,7 @@ onUnmounted(() => {
     position: absolute;
     top: 0;
     left: 0;
+    width: 150px;
     background-color: rgba(0, 0, 0, 0.5);
     line-height: 30px;
     padding: 5px 10px;
@@ -610,7 +637,13 @@ onUnmounted(() => {
     transform: translateX(-50%);
     z-index: 30;
   }
-
+  .dissolve {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    right: 60px;
+    top: 20px;
+  }
   .quit {
     position: absolute;
     width: 30px;
