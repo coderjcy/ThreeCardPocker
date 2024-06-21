@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "run-p type-check \"build-only {@}\" --",
+    "upload": "vite build  && zip -r three-card-pocker.zip three-card-pocker && scp ./three-card-pocker.zip my:/my-web-app && rm ./three-card-pocker.zip && ssh my \"cd /my-web-app && unzip -o three-card-pocker.zip && rm ./three-card-pocker.zip \"",
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc --build --force",

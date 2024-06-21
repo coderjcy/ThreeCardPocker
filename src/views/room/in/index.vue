@@ -1,5 +1,6 @@
 <template>
-  <div class="screen">
+  <div :class="{ screen: true, landscape: isLandscape }">
+    <!-- @click="myselfData.state = myselfData.state === 'win' ? 'playing' : 'win'" -->
     <!-- 对手信息 -->
     <div class="users">
       <template v-for="user in otherData" :key="user.id">
@@ -83,6 +84,15 @@
         <div>
           <div>{{ myselfData.name }}</div>
           <div>总分:{{ myselfData.balance }} 投注:{{ myselfData.chip || 0 }}</div>
+          <div
+            :class="{
+              'balance-change': true,
+              win: myselfData.state === 'win',
+              lose: myselfData.state === 'lose'
+            }"
+          >
+            {{ myselfData.chip }}
+          </div>
         </div>
       </div>
     </div>
@@ -148,6 +158,7 @@
     </div>
     <!-- 筹码池 -->
     <div ref="chipDeskEl" class="chip-pool"></div>
+
     <img
       v-if="roomState === 'waiting'"
       src="@/assets/imgs/dissolve.png"
@@ -167,7 +178,7 @@
 </template>
 <script setup lang="ts">
 import { ElMessage } from 'element-plus'
-import { onMounted, onUnmounted, ref, computed, getCurrentInstance } from 'vue'
+import { onMounted, onUnmounted, ref, computed, getCurrentInstance, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { queryRoomInfo, dissolveRoom } from '@/service/room-list/index'
 type IRoomType = 'waiting' | 'playing'
@@ -237,7 +248,7 @@ const handleMessage = (e: any) => {
   } else if (res.data.type === 'toggle-room-state') {
     if (res.data.state === 'playing') {
       ElMessage.success('游戏开始')
-      // playBGM()
+      playBGM()
       otherData.value.forEach((i) => addChipInDesk(i.id, roomInfo.value.baseChip))
       addChipInDesk(myselfData.value.id, roomInfo.value.baseChip)
       roomState.value = 'playing'
@@ -246,7 +257,26 @@ const handleMessage = (e: any) => {
       ElMessage.error('游戏结束')
       stopBGM()
       roomState.value = 'waiting'
-      while (chipDeskEl.value.firstChild) chipDeskEl.value.removeChild(chipDeskEl.value.firstChild)
+      //   改为异步函数把所有的筹码都放到赢者的头像然后移除
+      console.log(`output->`, chipDeskEl.value.children)
+      console.dir(chipDeskEl.value)
+      // chipDeskEl.value.children.forEach((i) => {
+      //
+      // })
+      for (let i = 0; i < chipDeskEl.value.children.length; i++) {
+        const item = chipDeskEl.value.children[i]
+        // 找到赢家的头像位置
+        item.style.top = `0px`
+        item.style.left = `0px`
+        item.addEventListener('transitionend', () => item.remove())
+      }
+
+      // nextTick(() => {
+      //   while (chipDeskEl.value.firstChild)
+      //     chipDeskEl.value.removeChild(chipDeskEl.value.firstChild)
+      // })
+      //
+      // while (chipDeskEl.value.firstChild) chipDeskEl.value.removeChild(chipDeskEl.value.firstChild)
     }
   } else if (res.data.type === 'update-game-data') {
     myselfData.value = res.data.self
@@ -378,6 +408,10 @@ const handleDissolveRoom = () => {
     .then(() => dissolveRoom(roomId).then(() => router.push('/room/list')))
     .catch(() => {})
 }
+const isLandscape = ref(false)
+if (window.innerWidth > window.innerHeight) isLandscape.value = false
+else isLandscape.value = true
+
 // 添加筹码到筹码池
 const addChipInDesk = (playerId: number, chip: number) => {
   const userEl = playerRefs.value[playerId]
@@ -387,8 +421,7 @@ const addChipInDesk = (playerId: number, chip: number) => {
   const rect1 = userEl.getBoundingClientRect()
   const rect2 = chipDeskEl.value.getBoundingClientRect()
 
-  let isLandscape = false
-  if (isLandscape) {
+  if (isLandscape.value) {
     chipEL.style.top = rect2.width + rect2.left - rect1.left - rect1.width + 'px'
     chipEL.style.left = rect1.top - rect2.top + 'px'
   } else {
@@ -397,7 +430,7 @@ const addChipInDesk = (playerId: number, chip: number) => {
   }
   chipDeskEl.value.appendChild(chipEL)
   requestAnimationFrame(() => {
-    if (isLandscape) {
+    if (isLandscape.value) {
       chipEL.style.top = Math.random() * rect2.width + 'px'
       chipEL.style.left = Math.random() * rect2.height + 'px'
     } else {
@@ -428,18 +461,23 @@ onUnmounted(() => {
 })
 </script>
 <style lang="less" scoped>
+.landscape {
+  transform: rotate(90deg) translateY(-100vw);
+  width: 100vh;
+  height: 100vw;
+}
+
 .screen {
-  width: 100%;
-  height: 100%;
-  // transform: rotate(90deg) translateY(-100vw);
-  // width: 100vh;
-  // height: 100vw;
-  transform-origin: top left;
+  &:not(.landscape) {
+    width: 100%;
+    height: 100%;
+  }
   overflow: hidden;
   background: url(@/assets/imgs/desk.jpg) no-repeat;
   background-size: cover;
   position: relative;
   color: #fff;
+  transform-origin: top left;
 
   .users {
     position: absolute;
@@ -534,6 +572,47 @@ onUnmounted(() => {
           margin-right: 5px;
           border-radius: 5px;
         }
+      }
+
+      .balance-change {
+        &.win {
+          --shadow-color: #67c23a;
+          display: block;
+        }
+        &.lose {
+          --shadow-color: #f56c6c;
+          display: block;
+        }
+        @keyframes chipChange {
+          0% {
+            bottom: 0;
+            opacity: 0.8;
+          }
+          70%,
+          100% {
+            bottom: 50px;
+            opacity: 1;
+          }
+        }
+        position: absolute;
+        bottom: 0px;
+        right: 0px;
+        filter: brightness(105%);
+        font-size: 30px;
+        opacity: 0;
+        animation: chipChange 0.5s linear;
+        --text-color: #fff;
+        color: var(--text-color);
+        display: none;
+        text-shadow:
+          0 0 3px var(--text-color),
+          0 0 5px var(--text-color),
+          0 0 7px var(--text-color),
+          0 0 10px var(--shadow-color),
+          0 0 17px var(--shadow-color),
+          0 0 20px var(--shadow-color),
+          0 0 25px var(--shadow-color),
+          0 0 37px var(--shadow-color);
       }
       .win .avatar::after {
         content: '赢家';
