@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      .cc {
+        width: 200px;
+        height: 200px;
+        background: red;
+        display: flex;
+        &::after {
+          content: '';
+          width: 20px;
+          height: 20px;
+          background: blue;
+        }
+
+        .e {
+          background: green;
+          width: 20px;
+          height: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="cc">
+      <div class="e"></div>
+    </div>
+  </body>
+</html>

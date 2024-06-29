@@ -1,12 +1,7 @@
 <template>
   <div class="room-list">
     <div class="rooms" v-if="!isShowCreate">
-      <div
-        class="room"
-        v-for="item in roomList"
-        :key="item.id"
-        @click="$router.push('/room/in/' + item.id)"
-      >
+      <div class="room" v-for="item in roomList" :key="item.id" @click="enterRoom(item)">
         <div>{{ item.name }}</div>
         <div>({{ item.currentNumber }} / {{ item.playerNumber }} 人)</div>
       </div>
@@ -64,6 +59,10 @@ const getRoomList = () => {
   queryRoomList().then((res: any) => {
     roomList.value = res.data
   })
+}
+const enterRoom = (room: any) => {
+  if (room.currentNumber >= room.playerNumber) return ElMessage.warning('房间人数已满')
+  router.push('/room/in/' + room.id)
 }
 const handleCreateClick = () => {
   isShowCreate.value = true
