@@ -1,39 +1,20 @@
-# project
+## 炸金花 &nbsp;&nbsp;
 
-This template should help get you started developing with Vue 3 in Vite.
+[![Build Status](https://travis-ci.org/mailgyc/doudizhu.svg?branch=master)](https://travis-ci.org/mailgyc) &nbsp;&nbsp;
+[![Coverage Status](https://coveralls.io/repos/github/mailgyc/doudizhu/badge.svg?branch=master)](https://coveralls.io/github/mailgyc/doudizhu?branch=master) &nbsp;&nbsp;
+[![MIT Licence](https://badges.frapsoft.com/os/mit/mit.svg?v=103)](https://opensource.org/licenses/mit-license.php)
 
-## Recommended IDE Setup
+炸金花游戏，后端基于node+MySQL开发，前端vue3
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+**Dependencies**
 
-## Type Support for `.vue` Imports in TS
+- Node 20.10.0+
+- Mysql 8.3
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+运行截图
 
-## Customize configuration
-
-See [Vite Configuration Reference](https://vitejs.dev/config/).
-
-## Project Setup
-
-```sh
-npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### Type-Check, Compile and Minify for Production
-
-```sh
-npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
+![](https://coderjcy.cn/static/run1.png)
+![](https://coderjcy.cn/static/run2.png)
+![](https://coderjcy.cn/static/run3.png)
+![](https://coderjcy.cn/static/run4.png)
+![](https://coderjcy.cn/static/run5.png)

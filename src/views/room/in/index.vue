@@ -163,14 +163,31 @@
       </div>
     </div>
 
-    <!-- 房间信息 -->
-    <div class="room-info">
-      <div>房间号: {{ roomInfo.id }}</div>
-      <div style="margin-left: 20px">底注: {{ roomInfo.baseChip }}</div>
-    </div>
+    <!-- 筹码池 -->
+    <div
+      ref="chipDeskEl"
+      class="chip-pool"
+      :style="{
+        '--chip-value': `'${chipPool}'`
+      }"
+    ></div>
+    <template v-if="roomState === 'waiting' && false">
+      <!-- 房间信息 -->
+      <div class="room-info">
+        <div>房间号: {{ roomInfo.id }}</div>
+        <div style="margin-left: 20px">底注: {{ roomInfo.baseChip }}</div>
+      </div>
+      <!-- 解散房间 -->
+      <img
+        src="@/assets/imgs/dissolve.png"
+        class="dissolve"
+        @click="handleDissolveRoom"
+        alt="解散房间"
+      />
+      <!-- 退出房间 -->
+      <img src="@/assets/imgs/exit.png" class="quit" @click="$router.back" alt="退出房间" />
+      <!-- 消息列表 -->
 
-    <!-- 消息列表 -->
-    <div>
       <img
         class="chatting-icon"
         src="@/assets/imgs/chat.png"
@@ -187,31 +204,7 @@
           <el-button @click="handleSendMessage">发送</el-button>
         </div>
       </div>
-    </div>
-    <!-- 筹码池 -->
-    <div
-      ref="chipDeskEl"
-      class="chip-pool"
-      :style="{
-        '--chip-value': `'${chipPool}'`
-      }"
-    ></div>
-
-    <img
-      v-if="roomState === 'waiting'"
-      src="@/assets/imgs/dissolve.png"
-      class="dissolve"
-      @click="handleDissolveRoom"
-      alt="解散房间"
-    />
-    <!-- 退出房间 -->
-    <img
-      v-if="roomState === 'waiting'"
-      src="@/assets/imgs/exit.png"
-      class="quit"
-      @click="$router.back"
-      alt="退出房间"
-    />
+    </template>
   </div>
 </template>
 <script setup lang="ts">
@@ -589,8 +582,8 @@ const proxy = getCurrentInstance()!.proxy
   .myself {
     .player-info {
       position: absolute;
-      bottom: 20px;
-      left: 20px;
+      bottom: 10px;
+      left: 10px;
     }
     .bet {
       top: -25px;
@@ -695,18 +688,18 @@ const proxy = getCurrentInstance()!.proxy
     .countdown {
       position: absolute;
       bottom: 0;
-      width: 60px;
+      width: 40px;
 
       img {
-        width: 60px;
-        height: 60px;
+        width: 40px;
+        height: 40px;
       }
 
       .remain {
         margin-bottom: 5px;
         text-align: center;
         font-weight: bold;
-        font-size: 26px;
+        font-size: 22px;
         width: 100%;
       }
 
@@ -893,7 +886,7 @@ const proxy = getCurrentInstance()!.proxy
 // 2人房间
 .mode-number-2 {
   .player-1 {
-    top: 20px;
+    top: 10px;
     left: 50%;
     transform: translateX(-50%);
 
@@ -923,8 +916,8 @@ const proxy = getCurrentInstance()!.proxy
 // 3人房间
 .mode-number-3 {
   .player-1 {
-    top: 60px;
-    left: 20px;
+    top: 10px;
+    left: 10px;
     .countdown {
       right: 0;
       margin-right: -10px;
@@ -932,8 +925,8 @@ const proxy = getCurrentInstance()!.proxy
     }
   }
   .player-2 {
-    top: 60px;
-    right: 20px;
+    top: 10px;
+    right: 10px;
     .countdown {
       left: 0;
       margin-left: -10px;
@@ -949,8 +942,8 @@ const proxy = getCurrentInstance()!.proxy
 // 4人房间
 .mode-number-4 {
   .player-1 {
-    top: 60px;
-    left: 20px;
+    top: 10px;
+    left: 10px;
     .countdown {
       right: 0;
       margin-right: -10px;
@@ -958,7 +951,7 @@ const proxy = getCurrentInstance()!.proxy
     }
   }
   .player-2 {
-    top: 20px;
+    top: 10px;
     left: 50%;
     transform: translateX(-50%);
     .countdown {
@@ -974,8 +967,8 @@ const proxy = getCurrentInstance()!.proxy
     }
   }
   .player-3 {
-    top: 60px;
-    right: 20px;
+    top: 10px;
+    right: 10px;
     .countdown {
       left: 0;
       margin-left: -10px;
