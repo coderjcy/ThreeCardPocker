@@ -1,5 +1,5 @@
 <template>
-  <div :class="{ screen: true, landscape: isLandscape }">
+  <div :class="{ screen: true, landscape: isLandscape, compare: isShowCompare }">
     <!-- 对手信息 -->
     <div :class="['players', `mode-number-${roomInfo.playerNumber}`]">
       <template v-for="(player, index) in otherPlayers" :key="player.id">
@@ -57,6 +57,7 @@
             <template v-if="player.state === 'win'"> + {{ chipPool - player.chip }} </template>
             <template v-else>- {{ player.chip }}</template>
           </div>
+
           <div class="pokers" v-if="roomState !== 'waiting'">
             <template v-if="player.cards?.length">
               <img
@@ -73,62 +74,6 @@
             <div v-if="!player.isBlind" class="view-state">已看牌</div>
           </div>
         </div>
-        <!-- <div class="user">
-          <div class="info">
-            <div v-if="user.remain > -1" class="countdown">
-              <div class="remain">{{ user.remain }}</div>
-              <img src="@/assets/imgs/countdown.png" alt="" />
-            </div>
-
-            <el-button
-              class="compare-btn"
-              v-if="user.state === 'playing' && isShowCompare"
-              @click="handleComparePoker(user.id)"
-              >比牌</el-button
-            >
-
-            <div v-if="roomState !== 'waiting'" class="pokers">
-              <template v-if="user.cards?.length">
-                <img
-                  class="poker"
-                  v-for="i in user.cards"
-                  :src="dynamicImageUrl(i.suitLabel, i.label)"
-                  :key="i.label + i.suitLabel"
-                />
-                <div class="card-type">{{ user.cardType }}</div>
-              </template>
-              <template v-else>
-                <img class="poker" v-for="i in 3" :key="i" src="@/assets/imgs/backface.jpg" />
-              </template>
-              <div v-if="!user.isBlind" class="state view">已看牌</div>
-              <div v-if="user.state === 'abandon'" class="state abandon">已放弃</div>
-            </div>
-            <div v-if="roomState === 'waiting'" class="ready-state">
-              {{ user.state === 'ready' ? '已准备' : '未准备' }}
-            </div>
-            <div
-              :ref="(el) => (playerRefs[user.id] = el)"
-              :class="{
-                'lose-state': user.state === 'lose' || user.state === 'abandon'
-              }"
-            >
-              <img class="avatar" :src="user.avatar" alt="" />
-              <div>{{ user.name }}</div>
-            </div>
-          </div>
-          <div>投注: {{ user.chip || 0 }}&nbsp;&nbsp;&nbsp;总分:{{ user.balance }}</div>
-          <div
-            :class="[
-              'balance-change',
-              user.state === 'win' && roomState === 'over' ? 'win' : '',
-              user.state === 'lose' && roomState === 'over' ? 'lose' : '',
-              user.state === 'abandon' && roomState === 'over' ? 'lose' : ''
-            ]"
-          >
-            <template v-if="user.state === 'win'"> + {{ chipPool - user.chip }} </template>
-            <template v-else>- {{ user.chip }}</template>
-          </div>
-        </div> -->
       </template>
     </div>
 
@@ -181,12 +126,6 @@
         <div class="coin bet" v-if="roomState === 'playing'">
           <span>{{ myselfData.chip }}</span>
         </div>
-        <!-- 准备、取消准备 -->
-        <!-- <div v-if="roomState === 'waiting'" class="ready-handler">
-          <el-button @click="handleToggleState" size="large">{{
-            myselfData.state === 'ready' ? '取消准备' : '准备'
-          }}</el-button>
-        </div> -->
         <label class="ready-state" v-if="roomState === 'waiting'">
           <input
             type="checkbox"
@@ -195,7 +134,7 @@
           />
           <div class="checkmark"></div>
         </label>
-        <div v-if="myselfData.remain > -1" class="countdown right">
+        <div v-if="myselfData.remain > -1" class="countdown">
           <div class="remain">{{ myselfData.remain }}</div>
           <img src="@/assets/imgs/countdown.png" alt="" />
         </div>
@@ -280,14 +219,12 @@ import { ElMessage } from 'element-plus'
 import { onMounted, onUnmounted, ref, computed, getCurrentInstance } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { queryRoomInfo, dissolveRoom } from '@/service/room-list/index'
-import { Select } from '@element-plus/icons-vue'
 
 type IRoomType = 'waiting' | 'playing' | 'over'
 const route = useRoute()
 const router = useRouter()
 const roomId = route.params.roomId as string
 const token = localStorage.getItem('token')
-
 const messageList = ref<any[]>([])
 const isShowChatting = ref(false)
 
@@ -348,14 +285,14 @@ const handleMessage = (e: any) => {
     ElMessage[res.data.notifyType as notifyType](res.data.msg)
   } else if (res.data.type === 'toggle-room-state') {
     if (res.data.state === 'playing') {
-      ElMessage.success('游戏开始')
+      // ElMessage.success('游戏开始')
       playBGM()
       otherPlayers.value.forEach((i) => addChipInDesk(i.id, roomInfo.value.baseChip))
       addChipInDesk(myselfData.value.id, roomInfo.value.baseChip)
       roomState.value = 'playing'
     }
     if (res.data.state === 'over') {
-      ElMessage.error('游戏结束')
+      // ElMessage.error('游戏结束')
       stopBGM()
       roomState.value = 'over'
       const winnerEl = playerRefs.value[res.data.winnerId]
@@ -501,7 +438,7 @@ const playBGM = () => {
 const stopBGM = () => {
   musics.bgm.pause()
 }
-const proxy = getCurrentInstance()!.proxy
+
 // 解散房间
 const handleDissolveRoom = () => {
   ;(proxy as any)
@@ -513,8 +450,13 @@ const handleDissolveRoom = () => {
     .catch(() => {})
 }
 const isLandscape = ref(false)
-if (window.innerWidth > window.innerHeight) isLandscape.value = false
-else isLandscape.value = true
+if (window.innerWidth > window.innerHeight) {
+  isLandscape.value = false
+  document.body.classList.remove('landscape')
+} else {
+  isLandscape.value = true
+  document.body.classList.add('landscape')
+}
 
 // 添加筹码到筹码池
 const addChipInDesk = (playerId: number, chip: number) => {
@@ -565,6 +507,12 @@ onUnmounted(() => {
   timer && clearInterval(timer)
   stopBGM()
 })
+const proxy = getCurrentInstance()!.proxy
+// proxy.$message({
+//   message: '房间已解散',
+//   type: 'success',
+//   duration: 0
+// })
 </script>
 <style lang="less" scoped>
 .landscape {
@@ -577,6 +525,28 @@ onUnmounted(() => {
   &:not(.landscape) {
     width: 100%;
     height: 100%;
+  }
+
+  &::after {
+    display: none;
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 30;
+    transform: translateX(0);
+  }
+  &.compare {
+    &::after {
+      display: unset;
+    }
+    .players .player-info {
+      z-index: 31;
+      cursor: pointer;
+    }
   }
   overflow: hidden;
   background: url(@/assets/imgs/desk.jpg) no-repeat;
@@ -622,12 +592,12 @@ onUnmounted(() => {
       bottom: 20px;
       left: 20px;
     }
-    // .ready-handler {
-    //   position: absolute;
-    //   right: -10px;
-    //   top: 50%;
-    //   transform: translate(100%, -50%);
-    // }
+    .bet {
+      top: -25px;
+      // right: 0;
+      // left: unset !important;
+      // transform: unset !important;
+    }
     .pokers {
       position: fixed;
       bottom: 20px;
@@ -643,6 +613,12 @@ onUnmounted(() => {
       .card-type {
         font-size: 30px;
       }
+    }
+    .countdown {
+      top: 0;
+      bottom: unset !important;
+      margin-bottom: 10px;
+      animation: countdown-top 1s infinite linear;
     }
   }
   .card-type {
@@ -666,18 +642,21 @@ onUnmounted(() => {
     padding: 10px 5px 10px 10px;
     background-color: rgba(255, 255, 255, 0.2);
     box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.05);
+    z-index: 55;
+
     .bet {
       position: absolute;
-      bottom: -25px;
+      bottom: -95px;
       left: 50%;
       transform: translateX(-50%);
       width: 75px !important;
       background: rgba(0, 0, 0, 0.3) !important;
     }
-    // margin-top: 20px;
+
     .avatar {
       position: relative;
       display: flex;
+
       img {
         width: 50px;
         height: 50px;
@@ -690,21 +669,6 @@ onUnmounted(() => {
       }
     }
 
-    .win .avatar::after {
-      content: '赢家';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #ffd700;
-      font-size: 32px;
-      white-space: nowrap;
-      text-shadow: 0 0 20px #ccc;
-    }
     .nickname {
       line-height: 30px;
     }
@@ -743,6 +707,7 @@ onUnmounted(() => {
         text-align: center;
         font-weight: bold;
         font-size: 26px;
+        width: 100%;
       }
 
       @keyframes countdown-left {
@@ -765,6 +730,17 @@ onUnmounted(() => {
         }
         100% {
           transform: translateX(100%) scale(1);
+        }
+      }
+      @keyframes countdown-top {
+        0% {
+          transform: translateY(-100%) scale(1);
+        }
+        50% {
+          transform: translateY(-100%) scale(1.1);
+        }
+        100% {
+          transform: translateY(-100%) scale(1);
         }
       }
     }
@@ -811,7 +787,7 @@ onUnmounted(() => {
     bottom: 30px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 30;
+    z-index: 31;
     text-align: center;
     background: rgba(255, 255, 255, 0.5);
     border-radius: 5px;
@@ -920,12 +896,27 @@ onUnmounted(() => {
     top: 20px;
     left: 50%;
     transform: translateX(-50%);
+
+    .countdown {
+      left: 0;
+      margin-left: -10px;
+      animation: countdown-left 1s infinite linear;
+      .remain {
+        position: absolute;
+        bottom: 0;
+        transform: translateY(100%);
+        margin-top: 10px;
+      }
+    }
     .pokers {
-      bottom: 50% !;
-      right: 0;
+      bottom: 50%;
+      right: -10px;
       left: unset;
       top: unset;
-      transform: translate(100%, -50%);
+      transform: translate(100%, 50%);
+    }
+    .bet {
+      bottom: -25px;
     }
   }
 }
@@ -958,10 +949,8 @@ onUnmounted(() => {
 // 4人房间
 .mode-number-4 {
   .player-1 {
-    top: 50%;
+    top: 60px;
     left: 20px;
-    transform: translateY(-50%);
-
     .countdown {
       right: 0;
       margin-right: -10px;
@@ -976,12 +965,17 @@ onUnmounted(() => {
       left: 0;
       margin-left: -10px;
       animation: countdown-left 1s infinite linear;
+      .remain {
+        position: absolute;
+        bottom: 0;
+        transform: translateY(100%);
+        margin-top: 10px;
+      }
     }
   }
   .player-3 {
-    top: 50%;
+    top: 60px;
     right: 20px;
-    transform: translateY(-50%);
     .countdown {
       left: 0;
       margin-left: -10px;
@@ -994,7 +988,6 @@ onUnmounted(() => {
     }
   }
 }
-/* Hide the default checkbox */
 
 .ready-state {
   position: absolute;
