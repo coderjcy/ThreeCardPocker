@@ -28,7 +28,7 @@
             Forget Passwords?
             <a class="link" @click="$router.push('/reset')">Click here to reset it.!</a>
           </p>
-          <p>No Account? <a class="link" @click="$router.push('/sign-up')">Sign Up Here!</a></p>
+          <p>No Account? <a class="link" @click="$router.push('/signup')">Sign Up Here!</a></p>
           <a class="link" href=""> </a>
         </div>
         <a class="link" href=""> </a>

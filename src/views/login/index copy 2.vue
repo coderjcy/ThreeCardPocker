@@ -1,21 +1,19 @@
 <template>
   <div class="login">
     <div class="form_area">
-      <p class="title">Login</p>
+      <p class="title">SIGN UP</p>
       <form action="">
         <div class="form_group">
           <label class="sub_title" for="name">Name</label>
-          <input
-            v-model="userInfo.username"
-            placeholder="Enter your full name"
-            class="form_style"
-            type="text"
-          />
+          <input placeholder="Enter your full name" class="form_style" type="text" />
+        </div>
+        <div class="form_group">
+          <label class="sub_title" for="email">Email</label>
+          <input placeholder="Enter your email" id="email" class="form_style" type="email" />
         </div>
         <div class="form_group">
           <label class="sub_title" for="password">Password</label>
           <input
-            v-model="userInfo.password"
             placeholder="Enter your password"
             id="password"
             class="form_style"
@@ -23,12 +21,8 @@
           />
         </div>
         <div>
-          <button class="btn" @click="handleLogin">Login</button>
-          <p>
-            Forget Passwords?
-            <a class="link" @click="$router.push('/reset')">Click here to reset it.!</a>
-          </p>
-          <p>No Account? <a class="link" @click="$router.push('/sign-up')">Sign Up Here!</a></p>
+          <button class="btn" @click="handle">SIGN UP</button>
+          <p>Have an Account? <a class="link" @click="$router.push('/login')">Login Here!</a></p>
           <a class="link" href=""> </a>
         </div>
         <a class="link" href=""> </a>
@@ -38,12 +32,12 @@
   </div>
 </template>
 <script setup lang="ts">
-import { reactive, getCurrentInstance } from 'vue'
+import { reactive } from 'vue'
+import { ElForm } from 'element-plus'
 import { login } from '@/service/login'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 import useUserStores from '@/store/user'
-const proxy = getCurrentInstance().proxy
 const userStore = useUserStores()
 const userInfo = reactive({
   username: undefined,
@@ -66,12 +60,9 @@ const rules = {
   ]
 }
 const router = useRouter()
-const handleLogin = async () => {
-  console.log(`output->`, name)
-  if (!userInfo.username) return proxy.$message.warning('请输入账号')
-  if (!userInfo.password) return proxy.$message.warning('请输入密码')
-  // const isPass = await formRef.validate((v: any) => v)
-  // if (!isPass) return
+const handleLogin = async (formRef: InstanceType<typeof ElForm>) => {
+  const isPass = await formRef.validate((v: any) => v)
+  if (!isPass) return
   const res = await login(userInfo)
   localStorage.setItem('token', res.data.token)
   localStorage.setItem('userInfo', JSON.stringify(res.data))

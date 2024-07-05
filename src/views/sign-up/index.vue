@@ -1,8 +1,8 @@
 <template>
   <div class="login">
     <div class="form_area">
-      <p class="title">Login</p>
-      <form action="">
+      <p class="title">Sign Up</p>
+      <form>
         <div class="form_group">
           <label class="sub_title" for="name">Name</label>
           <input
@@ -13,8 +13,19 @@
           />
         </div>
         <div class="form_group">
+          <label class="sub_title" for="email">Email</label>
+          <input
+            v-model="userInfo.email"
+            placeholder="Enter your email"
+            id="email"
+            class="form_style"
+            type="email"
+          />
+        </div>
+        <div class="form_group">
           <label class="sub_title" for="password">Password</label>
           <input
+            autocomplete="off"
             v-model="userInfo.password"
             placeholder="Enter your password"
             id="password"
@@ -23,12 +34,9 @@
           />
         </div>
         <div>
-          <button class="btn" @click="handleLogin">Login</button>
-          <p>
-            Forget Passwords?
-            <a class="link" @click="$router.push('/reset')">Click here to reset it.!</a>
-          </p>
-          <p>No Account? <a class="link" @click="$router.push('/sign-up')">Sign Up Here!</a></p>
+          <button class="btn" @click="handleLogin">Sign Up</button>
+
+          <p>Has Account? <a class="link" @click="$router.push('/login')">Login Here!</a></p>
           <a class="link" href=""> </a>
         </div>
         <a class="link" href=""> </a>
@@ -39,45 +47,27 @@
 </template>
 <script setup lang="ts">
 import { reactive, getCurrentInstance } from 'vue'
-import { login } from '@/service/login'
-import { ElMessage } from 'element-plus'
+import { signUp } from '@/service/login'
 import { useRouter } from 'vue-router'
-import useUserStores from '@/store/user'
+
 const proxy = getCurrentInstance().proxy
-const userStore = useUserStores()
+
 const userInfo = reactive({
   username: undefined,
-  password: undefined
+  password: undefined,
+  email: undefined
 })
-const rules = {
-  username: [
-    {
-      required: true,
-      trigger: 'blur',
-      message: '请输入账号'
-    }
-  ],
-  password: [
-    {
-      required: true,
-      trigger: 'blur',
-      message: '请输入密码'
-    }
-  ]
-}
 const router = useRouter()
 const handleLogin = async () => {
-  console.log(`output->`, name)
   if (!userInfo.username) return proxy.$message.warning('请输入账号')
+  if (!userInfo.email) return proxy.$message.warning('请输入邮箱')
   if (!userInfo.password) return proxy.$message.warning('请输入密码')
-  // const isPass = await formRef.validate((v: any) => v)
-  // if (!isPass) return
-  const res = await login(userInfo)
-  localStorage.setItem('token', res.data.token)
-  localStorage.setItem('userInfo', JSON.stringify(res.data))
-  userStore.userInfo = res.data
-  ElMessage.success('登录成功')
-  router.push('/room/list')
+  await signUp(userInfo)
+  proxy.$message.success('注册成功')
+  userInfo.email = undefined
+  userInfo.password = undefined
+  userInfo.username = undefined
+  setTimeout(() => router.push('/login'), 1000)
 }
 </script>
 <style lang="less" scoped>

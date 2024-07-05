@@ -11,3 +11,10 @@ export function login(userInfo: any) {
   })
   // }) as Promise<ILoginRes>
 }
+
+export function signUp(userInfo: any) {
+  return request.post({
+    url: '/login/sign-up',
+    data: userInfo
+  })
+}

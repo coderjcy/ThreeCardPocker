@@ -66,8 +66,9 @@
                 :src="dynamicImageUrl(i.suitLabel, i.label)"
                 :key="i.label + i.suitLabel"
               />
-              <div class="card-type">{{ player.cardType }}</div>
+              <div class="card-type">{{ player.cardsType }}</div>
             </template>
+
             <template v-else>
               <img class="poker" v-for="i in 3" :key="i" src="@/assets/imgs/backface.jpg" />
             </template>
@@ -90,7 +91,7 @@
             :src="dynamicImageUrl(i.suitLabel, i.label)"
             :key="i.label + i.suitLabel"
           />
-          <div class="card-type">{{ myselfData.cardType }}</div>
+          <div class="card-type">{{ myselfData.cardsType }}</div>
         </template>
       </div>
       <div class="player-info" :ref="(el) => (playerRefs[myselfData.id] = el)">
@@ -148,10 +149,10 @@
           {{ i }}
         </button>
       </div>
-      <div>
+      <div style="white-space: nowrap">
         <button class="btn" @click="handleAbandon">放弃</button>
         <button class="btn" @click="isShowCompare = true">比牌</button>
-        <button class="btn" @click="handleShowPoker">看牌</button>
+        <button v-if="myselfData.isBlind" class="btn" @click="handleShowPoker">看牌</button>
         <button
           v-if="currentChipMin !== 50"
           class="btn"
@@ -620,7 +621,8 @@ const proxy = getCurrentInstance()!.proxy
     left: 50%;
     transform: translateX(-50%);
     font-weight: bold;
-    text-shadow: 1px 1px #00ff77;
+    text-shadow: 2px 2px #fff;
+    color: #f56c6c;
     font-size: 20px;
     white-space: nowrap;
     letter-spacing: 3px;
@@ -887,8 +889,9 @@ const proxy = getCurrentInstance()!.proxy
 .mode-number-2 {
   .player-1 {
     top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
+    right: 10px;
+    // left: 50%;
+    // transform: translateX(-50%);
 
     .countdown {
       left: 0;

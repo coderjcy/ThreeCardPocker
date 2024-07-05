@@ -10,6 +10,11 @@ const router = createRouter({
       component: () => import('@/views/login/index.vue')
     },
     {
+      path: '/sign-up',
+      name: '注册',
+      component: () => import('@/views/sign-up/index.vue')
+    },
+    {
       path: '/room',
       name: '房间',
       children: [
