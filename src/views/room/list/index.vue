@@ -61,7 +61,6 @@ const getRoomList = () => {
   })
 }
 const enterRoom = (room: any) => {
-  if (room.currentNumber >= room.playerNumber) return ElMessage.warning('房间人数已满')
   router.push('/room/in/' + room.id)
 }
 const handleCreateClick = () => {

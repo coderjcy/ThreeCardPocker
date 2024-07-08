@@ -14,7 +14,7 @@
               'lose-state': player.state === 'lose' || player.state === 'abandon'
             }"
           >
-            <img :src="player.avatar" alt="" />
+            <img :src="player.avatar || defaultAvatar" alt="" @error="setDefaultAvatar" />
           </div>
           <label class="ready-state" v-if="roomState === 'waiting'">
             <input type="checkbox" :checked="player.state === 'ready'" disabled />
@@ -101,7 +101,7 @@
             'lose-state': myselfData.state === 'lose' || myselfData.state === 'abandon'
           }"
         >
-          <img :src="myselfData.avatar" alt="" />
+          <img :src="myselfData.avatar || defaultAvatar" alt="" @error="setDefaultAvatar" />
         </div>
         <div style="flex: 1">
           <div class="nickname">{{ myselfData.name }}</div>
@@ -213,7 +213,7 @@ import { ElMessage } from 'element-plus'
 import { onMounted, onUnmounted, ref, computed, getCurrentInstance } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { queryRoomInfo, dissolveRoom } from '@/service/room-list/index'
-
+import defaultAvatar from '@/assets/imgs/default.jpg'
 type IRoomType = 'waiting' | 'playing' | 'over'
 const route = useRoute()
 const router = useRouter()
@@ -507,6 +507,10 @@ const proxy = getCurrentInstance()!.proxy
 //   type: 'success',
 //   duration: 0
 // })
+
+const setDefaultAvatar = (e: any) => {
+  e.target.src = defaultAvatar
+}
 </script>
 <style lang="less" scoped>
 .landscape {
