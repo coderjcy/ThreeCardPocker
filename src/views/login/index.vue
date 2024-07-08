@@ -49,22 +49,7 @@ const userInfo = reactive({
   username: undefined,
   password: undefined
 })
-const rules = {
-  username: [
-    {
-      required: true,
-      trigger: 'blur',
-      message: '请输入账号'
-    }
-  ],
-  password: [
-    {
-      required: true,
-      trigger: 'blur',
-      message: '请输入密码'
-    }
-  ]
-}
+
 const router = useRouter()
 const handleLogin = async () => {
   console.log(`output->`, name)

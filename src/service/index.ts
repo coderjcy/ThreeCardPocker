@@ -1,10 +1,13 @@
 import axios from 'axios'
 import type { AxiosRequestConfig, AxiosInstance } from 'axios'
 
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElLoading } from 'element-plus'
 // const request = axios.create({
 //   baseURL: 'http://localhost:8000'
 // })
+interface IConfig extends AxiosRequestConfig {
+  loading?: boolean
+}
 
 class Request {
   instance: AxiosInstance
@@ -36,9 +39,16 @@ class Request {
       }
     )
   }
-
-  request(config: AxiosRequestConfig) {
+  request(config: IConfig) {
     return new Promise((resolve, reject) => {
+      let loading: any
+      if (config.loading) {
+        loading = ElLoading.service({
+          lock: true,
+          text: '加载中...',
+          background: 'rgba(0, 0, 0, 0.5)'
+        })
+      }
       this.instance
         .request({
           ...config
@@ -49,23 +59,26 @@ class Request {
         .catch((err) => {
           ElMessage.error(err)
         })
+        .finally(() => {
+          if (loading) loading.close()
+        })
     })
   }
 
-  get(config: AxiosRequestConfig) {
+  get(config: IConfig) {
     return this.request({
       method: 'get',
       ...config
     }) as any
   }
-  post(config: AxiosRequestConfig) {
+  post(config: IConfig) {
     return this.request({
       method: 'post',
       ...config
     }) as any
   }
-  delete(config: AxiosRequestConfig) {}
-  put(config: AxiosRequestConfig) {}
+  delete(config: IConfig) {}
+  put(config: IConfig) {}
 }
 
 export default new Request({

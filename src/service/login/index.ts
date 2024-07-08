@@ -18,3 +18,17 @@ export function signUp(userInfo: any) {
     data: userInfo
   })
 }
+
+export function applyVerifyCode(email: string) {
+  return request.post({
+    url: '/login/reset/code',
+    data: { email },
+    loading: true
+  })
+}
+export function resetPassword(data: any) {
+  return request.post({
+    url: '/login/reset ',
+    data
+  })
+}

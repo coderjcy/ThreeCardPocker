@@ -1,34 +1,39 @@
 <template>
-  <div class="login">
+  <div class="reset">
     <div class="form_area">
-      <p class="title">Login</p>
+      <p class="title">RESET PASSWORD</p>
       <form action="">
         <div class="form_group">
-          <label class="sub_title" for="name">Name</label>
+          <label class="sub_title" for="name">Email</label>
           <input
-            v-model="userInfo.username"
-            placeholder="Enter your full name"
+            :disabled="userInfo.id"
+            v-model="userInfo.email"
+            placeholder="Enter your email"
+            class="form_style"
+            type="email"
+          />
+        </div>
+        <div v-if="isSendCode" class="form_group">
+          <label class="sub_title" for="name">Password</label>
+          <input
+            v-model="userInfo.password"
+            placeholder="Enter your password"
             class="form_style"
             type="text"
           />
         </div>
-        <div class="form_group">
-          <label class="sub_title" for="password">Password</label>
+        <div v-if="isSendCode" class="form_group">
+          <label class="sub_title" for="name">Code</label>
           <input
-            v-model="userInfo.password"
-            placeholder="Enter your password"
-            id="password"
+            v-model="userInfo.code"
+            placeholder="Enter your code"
             class="form_style"
-            type="password"
+            type="text"
           />
         </div>
         <div>
-          <button class="btn" @click="handleLogin">Login</button>
-          <p>
-            Forget Passwords?
-            <a class="link" @click="$router.push('/reset')">Click here to reset it.!</a>
-          </p>
-          <p>No Account? <a class="link" @click="$router.push('/signup')">Sign Up Here!</a></p>
+          <button v-if="!isSendCode" class="btn" @click="getVerifyCode">GET CODE</button>
+          <button v-else class="btn" @click="submitReset">RESET PASSWORD</button>
           <a class="link" href=""> </a>
         </div>
         <a class="link" href=""> </a>
@@ -38,50 +43,46 @@
   </div>
 </template>
 <script setup lang="ts">
-import { reactive, getCurrentInstance } from 'vue'
-import { login } from '@/service/login'
-import { ElMessage } from 'element-plus'
+import { reactive, getCurrentInstance, ref } from 'vue'
+import { applyVerifyCode, resetPassword } from '@/service/login'
+
 import { useRouter } from 'vue-router'
-import useUserStores from '@/store/user'
-const proxy = getCurrentInstance().proxy
-const userStore = useUserStores()
+
+const proxy = getCurrentInstance()!.proxy!
+
 const userInfo = reactive({
-  username: undefined,
+  id: undefined,
+  email: undefined,
+  code: undefined,
   password: undefined
 })
-const rules = {
-  username: [
-    {
-      required: true,
-      trigger: 'blur',
-      message: '请输入账号'
-    }
-  ],
-  password: [
-    {
-      required: true,
-      trigger: 'blur',
-      message: '请输入密码'
-    }
-  ]
-}
+const isSendCode = ref(false)
+
 const router = useRouter()
-const handleLogin = async () => {
-  console.log(`output->`, name)
-  if (!userInfo.username) return proxy.$message.warning('请输入账号')
-  if (!userInfo.password) return proxy.$message.warning('请输入密码')
-  // const isPass = await formRef.validate((v: any) => v)
-  // if (!isPass) return
-  const res = await login(userInfo)
-  localStorage.setItem('token', res.data.token)
-  localStorage.setItem('userInfo', JSON.stringify(res.data))
-  userStore.userInfo = res.data
-  ElMessage.success('登录成功')
-  router.push('/room/list')
+const getVerifyCode = () => {
+  if (!userInfo.email) return proxy.$message.warning('请输入您的邮箱账号')
+
+  applyVerifyCode(userInfo.email).then((res: any) => {
+    userInfo.id = res.data.userId
+    isSendCode.value = true
+    proxy.$message.success('验证码发送成功！')
+  })
+}
+const submitReset = async () => {
+  if (!userInfo.password) return proxy.$message.warning('请输入您的新密码')
+  if (!userInfo.code) return proxy.$message.warning('请输入验证码')
+
+  await resetPassword({
+    userId: userInfo.id,
+    code: userInfo.code,
+    password: userInfo.password
+  })
+  proxy.$message.success('密码修改成功')
+  setTimeout(() => router.push('/login'), 1000)
 }
 </script>
 <style lang="less" scoped>
-.login {
+.reset {
   display: flex;
   align-items: center;
   justify-content: center;

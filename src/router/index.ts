@@ -15,6 +15,11 @@ const router = createRouter({
       component: () => import('@/views/sign-up/index.vue')
     },
     {
+      path: '/reset',
+      name: '忘记密码',
+      component: () => import('@/views/reset/index.vue')
+    },
+    {
       path: '/room',
       name: '房间',
       children: [
