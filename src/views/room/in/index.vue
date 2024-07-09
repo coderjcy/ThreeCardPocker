@@ -108,7 +108,6 @@
           <div class="coin">
             <span>{{ myselfData.balance }}</span>
           </div>
-          <!-- <div>总分:{{ myselfData.balance }} 投注:{{ myselfData.chip || 0 }}</div> -->
           <div
             v-if="roomState === 'over'"
             :class="[
@@ -172,7 +171,8 @@
         '--chip-value': `'${chipPool}'`
       }"
     ></div>
-    <template v-if="roomState === 'waiting' && false">
+    <!-- <template v-if="roomState === 'waiting' && false"> -->
+    <template v-if="roomState === 'waiting'">
       <!-- 房间信息 -->
       <div class="room-info">
         <div>房间号: {{ roomInfo.id }}</div>
@@ -180,6 +180,7 @@
       </div>
       <!-- 解散房间 -->
       <img
+        v-if="roomInfo.id === myselfData.id"
         src="@/assets/imgs/dissolve.png"
         class="dissolve"
         @click="handleDissolveRoom"
@@ -807,13 +808,14 @@ const setDefaultAvatar = (e: any) => {
 
   .room-info {
     position: absolute;
-    top: 0;
-    left: 0;
+    bottom: 10px;
+    right: 90px;
     background-color: rgba(255, 255, 255, 0.2);
-    line-height: 30px;
+    line-height: 20px;
     padding: 5px 10px;
     border-radius: 5px;
     display: flex;
+    font-size: 13px;
   }
 
   .chatting-records {
@@ -828,24 +830,24 @@ const setDefaultAvatar = (e: any) => {
     width: 30px;
     height: 30px;
     position: absolute;
-    right: 20px;
-    bottom: 20px;
+    right: 10px;
+    bottom: 50px;
     cursor: pointer;
   }
 
   .dissolve {
     position: absolute;
-    width: 20px;
-    height: 20px;
-    right: 40px;
-    top: 5px;
+    width: 30px;
+    height: 30px;
+    right: 50px;
+    bottom: 10px;
   }
   .quit {
     position: absolute;
-    width: 20px;
-    height: 20px;
+    width: 30px;
+    height: 30px;
     right: 10px;
-    top: 5px;
+    bottom: 10px;
   }
 
   .chip-pool {

@@ -1,11 +1,18 @@
 <template>
   <div class="room-list">
+    <el-button
+      v-if="!isShowCreate"
+      class="create-btn"
+      @click="handleCreateClick"
+      type="primary"
+      plain
+      >创建房间</el-button
+    >
     <div class="rooms" v-if="!isShowCreate">
       <div class="room" v-for="item in roomList" :key="item.id" @click="enterRoom(item)">
         <div>{{ item.name }}</div>
         <div>({{ item.currentNumber }} / {{ item.playerNumber }} 人)</div>
       </div>
-      <el-button class="create-btn" @click="handleCreateClick">创建房间</el-button>
     </div>
     <div class="create-room" v-else>
       <el-form :model="formData" ref="formRef" labelWidth="80">
@@ -93,12 +100,16 @@ onUnmounted(() => {
 </script>
 <style lang="less" scoped>
 .room-list {
-  width: 100%;
-  height: 100%;
   padding: 20px 20px 50px 20px;
-  display: flex;
-  flex-wrap: wrap;
-  position: relative;
+  text-align: center;
+
+  .rooms {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 20px;
+  }
   .room {
     border: 1px solid salmon;
     padding: 10px;
@@ -106,10 +117,7 @@ onUnmounted(() => {
     border-radius: 8px;
   }
   .create-btn {
-    position: absolute;
-    bottom: 9px;
-    left: 50%;
-    transform: translateX(-50%);
+    margin-bottom: 20px;
   }
 }
 </style>
