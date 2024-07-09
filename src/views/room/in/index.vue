@@ -45,18 +45,6 @@
             <div class="remain">{{ player.remain }}</div>
             <img src="@/assets/imgs/countdown.png" alt="" />
           </div>
-          <div
-            v-if="roomState === 'over'"
-            :class="[
-              'balance-change',
-              player.state === 'win' ? 'win' : '',
-              player.state === 'lose' ? 'lose' : '',
-              player.state === 'abandon' ? 'lose' : ''
-            ]"
-          >
-            <template v-if="player.state === 'win'"> + {{ chipPool - player.chip }} </template>
-            <template v-else>- {{ player.chip }}</template>
-          </div>
 
           <div class="pokers" v-if="roomState !== 'waiting'">
             <template v-if="player.cards?.length">
@@ -108,8 +96,8 @@
           <div class="coin">
             <span>{{ myselfData.balance }}</span>
           </div>
+
           <div
-            v-if="roomState === 'over'"
             :class="[
               'balance-change',
               myselfData.state === 'win' ? 'win' : '',
@@ -426,7 +414,7 @@ const playBGM = () => {
   musics.bgm.loop = true // 设置循环播放
   musics.bgm.currentTime = 0
   musics.bgm.volume = 0.3
-  musics.bgm.play() // 播放音频
+  // musics.bgm.play() // 播放音频
 }
 
 // 停止背景音乐
@@ -890,7 +878,16 @@ const setDefaultAvatar = (e: any) => {
     border-radius: 50%;
   }
 }
-
+.balance-to-bottom {
+  .balance-change {
+    &.win {
+      bottom: -50px !important;
+    }
+    &.lose {
+      bottom: -50px !important;
+    }
+  }
+}
 // 2人房间
 .mode-number-2 {
   .player-1 {
@@ -920,6 +917,7 @@ const setDefaultAvatar = (e: any) => {
     .bet {
       bottom: -25px;
     }
+    .balance-to-bottom;
   }
 }
 // 3人房间
@@ -932,6 +930,7 @@ const setDefaultAvatar = (e: any) => {
       margin-right: -10px;
       animation: countdown-right 1s infinite linear;
     }
+    .balance-to-bottom;
   }
   .player-2 {
     top: 10px;
@@ -946,6 +945,7 @@ const setDefaultAvatar = (e: any) => {
       left: 0;
       transform: translate(-130%, -50%);
     }
+    .balance-to-bottom;
   }
 }
 // 4人房间
