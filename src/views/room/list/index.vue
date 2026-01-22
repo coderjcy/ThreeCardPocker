@@ -62,14 +62,7 @@
           </div>
         </div>
       </div>
-      <!-- <div class="rooms">
-        <div class="room" v-for="item in roomList" :key="item.id" @click="enterRoom(item)">
-          <div>{{ item.name }}</div>
-          <div>({{ item.currentNumber }} / {{ item.playerNumber }} 人)</div>
 
-          <div>立即加入</div>
-        </div>
-      </div> -->
       <div class="hanlder">
         <button v-if="!isShowCreate" class="room-btn create-room" @click="handleCreateClick">
           <span class="btn-icon">➕</span>
@@ -122,6 +115,16 @@ import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 import useUserStore from '@/store/user'
 import Keybord from './keybord.vue'
+
+const isLandscape = ref(false)
+if (window.innerWidth > window.innerHeight) {
+  isLandscape.value = false
+  document.body.classList.remove('landscape')
+} else {
+  isLandscape.value = true
+  document.body.classList.add('landscape')
+}
+
 interface IRoomType {
   id: number
   name: string
@@ -146,20 +149,6 @@ const getRoomList = () => {
   queryRoomList().then((res: any) => {
     roomList.value = res.data
   })
-  // roomList.value = [
-  //   { id: 1, name: '房间1', playerList: [], playerNumber: 3, currentNumber: 0 },
-  //   { id: 2, name: '房间2', playerList: [], playerNumber: 3, currentNumber: 0 },
-  //   { id: 3, name: '房间3', playerList: [], playerNumber: 3, currentNumber: 0 },
-  //   { id: 4, name: '房间4', playerList: [], playerNumber: 3, currentNumber: 0 },
-  //   { id: 5, name: '房间5', playerList: [], playerNumber: 3, currentNumber: 0 },
-  //   { id: 6, name: '房间6', playerList: [], playerNumber: 3, currentNumber: 0 },
-  //   { id: 7, name: '房间7', playerList: [], playerNumber: 3, currentNumber: 0 },
-  //   { id: 8, name: '房间8', playerList: [], playerNumber: 3, currentNumber: 0 },
-  //   { id: 9, name: '房间9', playerList: [], playerNumber: 3, currentNumber: 0 },
-  //   { id: 10, name: '房间10', playerList: [], playerNumber: 3, currentNumber: 0 },
-  //   { id: 11, name: '房间11', playerList: [], playerNumber: 3, currentNumber: 0 },
-  //   { id: 12, name: '房间12', playerList: [], playerNumber: 3, currentNumber: 0 }
-  // ]
 }
 const enterRoom = (room: any) => {
   router.push('/room/in/' + room.id)
@@ -203,13 +192,29 @@ onUnmounted(() => {
   timer && clearInterval(timer)
 })
 </script>
+<style>
+.landscape {
+  .page {
+    width: 100vh !important;
+    height: 100vw !important;
+    transform: rotate(90deg) translateY(-100vw);
+    transform-origin: top left;
+  }
+
+  .room-btn {
+    width: 18vh !important;
+    height: 6vh !important;
+  }
+}
+</style>
 <style lang="less" scoped>
 .page {
+  width: 100vw;
+  height: 100vh;
   padding: 20px 20px 20px 20px;
   text-align: center;
   background: linear-gradient(180deg, #1a1a2e, #16213e);
-  width: 100vw;
-  height: 100vh;
+
   box-sizing: border-box;
   color: #fff;
   position: relative;
@@ -283,26 +288,12 @@ onUnmounted(() => {
     }
   }
 
-  .rooms {
-    width: 100%;
-    flex: 1;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px 20px;
-    .room {
-      width: 20vw;
-      height: 10vw;
-      border: 1px solid salmon;
-      padding: 10px;
-      text-align: center;
-      border-radius: 8px;
-    }
-  }
   .create-room-container {
     display: flex;
     flex-direction: column;
     width: 60%;
     margin: 0 auto;
+    height: 100%;
     .craete-room-title {
       font-size: 22px;
       font-weight: bold;
@@ -389,11 +380,8 @@ onUnmounted(() => {
   margin-top: 20px;
   display: flex;
   justify-content: space-evenly;
-  // position: fixed;
-  // left: 20%;
-  // right: 20%;
-  // bottom: 20px;
   .room-btn {
+    white-space: nowrap;
     border: none;
     border-radius: 10px;
     font-size: 18px;
@@ -405,8 +393,8 @@ onUnmounted(() => {
     justify-content: center;
     transition: all 0.3s ease;
     box-shadow: 0 6px 0 rgba(0, 0, 0, 0.2);
-    width: 15vw;
-    height: 5vw;
+    width: 18vw;
+    height: 6vw;
   }
   .create-room {
     background: linear-gradient(135deg, #00b4d8, #0077b6);
