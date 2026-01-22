@@ -40,6 +40,8 @@ const router = createRouter({
 router.beforeEach((to, from) => {
   if (to.path === '/') return '/login'
   if (to.path === '/login') return
+  if (to.path === '/sign-up') return
+  if (to.path === '/reset') return
   const token = localStorage.getItem('token')
   if (!token) return '/login'
 })

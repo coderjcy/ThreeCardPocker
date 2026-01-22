@@ -5,7 +5,11 @@ export function queryRoomList() {
     url: '/room/list'
   })
 }
-
+export function queryRoomInfoByCode(code: string) {
+  return request.get({
+    url: '/room/info/' + code
+  })
+}
 export function createRoom(data: any) {
   return request.post({
     url: '/room/create',

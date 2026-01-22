@@ -1,39 +1,39 @@
 <template>
   <div class="reset">
     <div class="form_area">
-      <p class="title">RESET PASSWORD</p>
+      <p class="title">重置密码</p>
       <form action="">
         <div class="form_group">
-          <label class="sub_title" for="name">Email</label>
+          <label class="sub_title" for="name">邮箱</label>
           <input
             :disabled="userInfo.id"
             v-model="userInfo.email"
-            placeholder="Enter your email"
+            placeholder="请输入邮箱"
             class="form_style"
             type="email"
           />
         </div>
         <div v-if="isSendCode" class="form_group">
-          <label class="sub_title" for="name">Password</label>
+          <label class="sub_title" for="name">新密码</label>
           <input
             v-model="userInfo.password"
-            placeholder="Enter your password"
+            placeholder="请输入新密码"
             class="form_style"
             type="text"
           />
         </div>
         <div v-if="isSendCode" class="form_group">
-          <label class="sub_title" for="name">Code</label>
+          <label class="sub_title" for="name">验证码</label>
           <input
             v-model="userInfo.code"
-            placeholder="Enter your code"
+            placeholder="请输入验证码"
             class="form_style"
             type="text"
           />
         </div>
         <div>
-          <button v-if="!isSendCode" class="btn" @click="getVerifyCode">GET CODE</button>
-          <button v-else class="btn" @click="submitReset">RESET PASSWORD</button>
+          <button v-if="!isSendCode" class="btn" @click="getVerifyCode">获取验证码</button>
+          <button v-else class="btn" @click="submitReset">重置密码</button>
           <a class="link" href=""> </a>
         </div>
         <a class="link" href=""> </a>
@@ -48,7 +48,7 @@ import { applyVerifyCode, resetPassword } from '@/service/login'
 
 import { useRouter } from 'vue-router'
 
-const proxy = getCurrentInstance()!.proxy!
+const proxy: any = getCurrentInstance()!.proxy!
 
 const userInfo = reactive({
   id: undefined,
@@ -145,6 +145,7 @@ const submitReset = async () => {
   width: 290px;
   font-size: 15px;
   background: #de5499;
+  color: #fff;
   border-radius: 10px;
   font-weight: 800;
   box-shadow: 3px 3px 0px 0px #e99f4c;

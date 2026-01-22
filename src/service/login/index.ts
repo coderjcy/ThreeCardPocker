@@ -9,7 +9,6 @@ export function login(userInfo: any) {
     url: '/login',
     data: userInfo
   })
-  // }) as Promise<ILoginRes>
 }
 
 export function signUp(userInfo: any) {

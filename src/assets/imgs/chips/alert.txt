@@ -1,0 +1,23 @@
+<svg width="400" height="260" xmlns="http://www.w3.org/2000/svg">
+  <!-- 遮罩层 -->
+  <rect width="400" height="260" fill="rgba(0,0,0,0.5)" rx="0" ry="0"/>
+  <!-- 弹窗主体 -->
+  <rect x="50" y="40" width="300" height="180" rx="12" ry="12" fill="url(#modalGradient)" stroke="#3498db" stroke-width="2"/>
+  <defs>
+    <linearGradient id="modalGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2c3e50"/>
+      <stop offset="100%" stop-color="#1a252f"/>
+    </linearGradient>
+  </defs>
+  <!-- 关闭按钮 -->
+  <text x="325" y="60" font-family="Arial" font-size="18" fill="#bdc3c7" cursor="pointer">✕</text>
+  <!-- 标题（成功类型） -->
+  <text x="200" y="85" font-family="Arial" font-size="20" font-weight="bold" fill="#fff" text-anchor="middle">✅ 任务完成</text>
+  <!-- 内容文本 -->
+  <text x="200" y="125" font-family="Arial" font-size="16" fill="#ecf0f1" text-anchor="middle">恭喜获得 100 金币 + 稀有装备</text>
+  <!-- 按钮 -->
+  <rect x="120" y="160" width="60" height="30" rx="6" ry="6" fill="#3498db" cursor="pointer"/>
+  <text x="150" y="180" font-family="Arial" font-size="14" fill="#fff" text-anchor="middle">确定</text>
+  <rect x="220" y="160" width="60" height="30" rx="6" ry="6" fill="#95a5a6" cursor="pointer"/>
+  <text x="250" y="180" font-family="Arial" font-size="14" fill="#fff" text-anchor="middle">取消</text>
+</svg>

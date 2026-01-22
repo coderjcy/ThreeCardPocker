@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-
+import { queryUserInfoById } from '@/service/user'
 interface IUserInfo {
   id: number
   nickname?: string
@@ -13,7 +13,13 @@ const useUserStore = defineStore('user', () => {
     const data = localStorage.getItem('userInfo')
     userInfo.value = data ? JSON.parse(data) : {}
   }
-  return { userInfo, setupStore }
+
+  const getUserInfoById = async (id: number) => {
+    const res = await queryUserInfoById(id)
+
+    return res.data
+  }
+  return { userInfo, setupStore, getUserInfoById }
 })
 
 export default useUserStore

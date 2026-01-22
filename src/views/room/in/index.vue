@@ -6,7 +6,7 @@
         <div
           :class="{ 'player-info': true, ['player-' + (index + 1)]: true }"
           :ref="(el) => (playerRefs[player.id] = el)"
-          @click="handleComparePoker(player.id)"
+          @click="handleComparePoker(player)"
         >
           <div
             :class="{
@@ -25,6 +25,7 @@
             <div class="coin">
               <span>{{ player.balance }}</span>
             </div>
+            <!-- <div :class="['balance-change']">123</div> -->
             <div
               :class="[
                 'balance-change',
@@ -41,8 +42,11 @@
           <div class="coin bet" v-if="roomState === 'playing'">
             <span>{{ player.chip }}</span>
           </div>
+          <!-- <div class="countdown">
+            <div class="remain">22</div> -->
           <div v-if="player.remain > -1" class="countdown">
             <div class="remain">{{ player.remain }}</div>
+
             <img src="@/assets/imgs/countdown.png" alt="" />
           </div>
 
@@ -138,7 +142,8 @@
       </div>
       <div style="white-space: nowrap">
         <button class="btn" @click="handleAbandon">放弃</button>
-        <button class="btn" @click="isShowCompare = true">比牌</button>
+        <button class="btn" @click="isShowCompare = !isShowCompare">比牌</button>
+        <!-- <button class="btn" @click="isShowCompare = true">比牌</button> -->
         <button v-if="myselfData.isBlind" class="btn" @click="handleShowPoker">看牌</button>
         <button
           v-if="currentChipMin !== 50"
@@ -166,18 +171,9 @@
         <div>房间号: {{ roomInfo.id }}</div>
         <div style="margin-left: 20px">底注: {{ roomInfo.baseChip }}</div>
       </div>
-      <!-- 解散房间 -->
-      <img
-        v-if="roomInfo.id === myselfData.id"
-        src="@/assets/imgs/dissolve.png"
-        class="dissolve"
-        @click="handleDissolveRoom"
-        alt="解散房间"
-      />
       <!-- 退出房间 -->
-      <img src="@/assets/imgs/exit.png" class="quit" @click="$router.back" alt="退出房间" />
+      <img src="@/assets/imgs/exit.png" class="quit" @click="handleLeaveRoom" alt="退出房间" />
       <!-- 消息列表 -->
-
       <img
         class="chatting-icon"
         src="@/assets/imgs/chat.png"
@@ -195,6 +191,7 @@
         </div>
       </div>
     </template>
+    <GameAlert ref="gameAlert" />
   </div>
 </template>
 <script setup lang="ts">
@@ -203,6 +200,7 @@ import { onMounted, onUnmounted, ref, computed, getCurrentInstance } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { queryRoomInfo, dissolveRoom } from '@/service/room-list/index'
 import defaultAvatar from '@/assets/imgs/default.jpg'
+import GameAlert from '@/components/Alert/index.vue'
 type IRoomType = 'waiting' | 'playing' | 'over'
 const route = useRoute()
 const router = useRouter()
@@ -266,6 +264,9 @@ const handleMessage = (e: any) => {
     messageList.value = res.data.chattingRecords
   } else if (res.data.type === 'notify') {
     ElMessage[res.data.notifyType as notifyType](res.data.msg)
+  } else if (res.data.type === 'room-dissolve') {
+    ElMessage.warning('房间已解散')
+    router.push('/room/list')
   } else if (res.data.type === 'toggle-room-state') {
     if (res.data.state === 'playing') {
       // ElMessage.success('游戏开始')
@@ -350,9 +351,9 @@ const dynamicImageUrl = (suit: any, label: any) => {
 }
 
 // 比牌
-const handleComparePoker = (playerId: number) => {
-  if (!isShowCompare.value) return
-  ws.send(JSON.stringify({ key: 'compare-poker', playerId }))
+const handleComparePoker = (player: any) => {
+  if (!isShowCompare.value || player.state === 'abandon') return
+  ws.send(JSON.stringify({ key: 'compare-poker', playerId: player.playerId }))
   isShowCompare.value = false
 }
 
@@ -414,23 +415,23 @@ const playBGM = () => {
   musics.bgm.loop = true // 设置循环播放
   musics.bgm.currentTime = 0
   musics.bgm.volume = 0.3
-  // musics.bgm.play() // 播放音频
+  musics.bgm.play() // 播放音频
 }
 
 // 停止背景音乐
 const stopBGM = () => {
   musics.bgm.pause()
 }
-
 // 解散房间
-const handleDissolveRoom = () => {
-  ;(proxy as any)
-    .$confirm('确定要解散房间吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消'
-    })
-    .then(() => dissolveRoom(roomId).then(() => router.push('/room/list')))
-    .catch(() => {})
+const gameAlert: any = ref(null)
+const handleLeaveRoom = () => {
+  gameAlert.value.open('解散房间', '确定要解散房间吗？', {
+    confirmCallback: () => {
+      if (roomInfo.value.creatorId === myselfData.value.id)
+        dissolveRoom(roomId).then(() => router.push('/room/list'))
+      else router.push('/room/list')
+    }
+  })
 }
 const isLandscape = ref(false)
 if (window.innerWidth > window.innerHeight) {
@@ -474,11 +475,12 @@ const roomInfo = ref({
   state: undefined,
   baseChip: 0,
   playerNumber: 0,
-  roundCount: 0
+  roundCount: 0,
+  code: undefined,
+  creatorId: undefined
 })
 onMounted(() => {
   enterRoom()
-
   queryRoomInfo(roomId).then((res: any) => {
     roomInfo.value = res.data
     roomState.value = res.data.state
@@ -490,12 +492,7 @@ onUnmounted(() => {
   timer && clearInterval(timer)
   stopBGM()
 })
-const proxy = getCurrentInstance()!.proxy
-// proxy.$message({
-//   message: '房间已解散',
-//   type: 'success',
-//   duration: 0
-// })
+const proxy: any = getCurrentInstance()!.proxy
 
 const setDefaultAvatar = (e: any) => {
   e.target.src = defaultAvatar
@@ -581,9 +578,9 @@ const setDefaultAvatar = (e: any) => {
     }
     .bet {
       top: -25px;
-      // right: 0;
-      // left: unset !important;
-      // transform: unset !important;
+      right: 5px !important;
+      left: unset !important;
+      transform: unset !important;
     }
     .pokers {
       position: fixed;
@@ -602,10 +599,15 @@ const setDefaultAvatar = (e: any) => {
       }
     }
     .countdown {
-      top: 0;
+      top: 0 !important;
       bottom: unset !important;
-      margin-bottom: 10px;
-      animation: countdown-top 1s infinite linear;
+      animation: countdown-top 1s infinite linear !important;
+    }
+    .balance-change {
+      &.win,
+      &.lose {
+        top: -55px;
+      }
     }
   }
   .card-type {
@@ -635,6 +637,7 @@ const setDefaultAvatar = (e: any) => {
     .bet {
       position: absolute;
       bottom: -95px;
+      // right: 5px;
       left: 50%;
       transform: translateX(-50%);
       width: 75px !important;
@@ -661,7 +664,6 @@ const setDefaultAvatar = (e: any) => {
       line-height: 30px;
     }
     .coin {
-      width: 100%;
       height: 20px;
       border-radius: 30px;
       background: rgba(0, 0, 0, 0.4);
@@ -684,7 +686,7 @@ const setDefaultAvatar = (e: any) => {
       position: absolute;
       bottom: 0;
       width: 40px;
-
+      animation: countdown-down 1s infinite linear;
       img {
         width: 40px;
         height: 40px;
@@ -698,6 +700,28 @@ const setDefaultAvatar = (e: any) => {
         width: 100%;
       }
 
+      @keyframes countdown-down {
+        0% {
+          transform: translateY(100%) scale(1);
+        }
+        50% {
+          transform: translateY(100%) scale(1.1);
+        }
+        100% {
+          transform: translateY(100%) scale(1);
+        }
+      }
+      @keyframes countdown-top {
+        0% {
+          transform: translateY(-100%) scale(1);
+        }
+        50% {
+          transform: translateY(-100%) scale(1.1);
+        }
+        100% {
+          transform: translateY(-100%) scale(1);
+        }
+      }
       @keyframes countdown-left {
         0% {
           transform: translateX(-100%) scale(1);
@@ -720,40 +744,26 @@ const setDefaultAvatar = (e: any) => {
           transform: translateX(100%) scale(1);
         }
       }
-      @keyframes countdown-top {
-        0% {
-          transform: translateY(-100%) scale(1);
-        }
-        50% {
-          transform: translateY(-100%) scale(1.1);
-        }
-        100% {
-          transform: translateY(-100%) scale(1);
-        }
-      }
     }
   }
   .balance-change {
     &.win {
       --shadow-color: #67c23a;
-      bottom: 70px;
       opacity: 1;
-      font-size: 36px;
     }
     &.lose {
       --shadow-color: #f56c6c;
-      bottom: 70px;
       opacity: 1;
-      font-size: 36px;
     }
 
     position: absolute;
-    bottom: 0;
+    bottom: 11px;
+    top: 11px;
     right: 0;
     left: 0;
     text-align: center;
     filter: brightness(105%);
-    font-size: 30px;
+    font-size: 36px;
     opacity: 0;
     transition: all 0.5s linear;
     color: var(--text-color);
@@ -797,7 +807,7 @@ const setDefaultAvatar = (e: any) => {
   .room-info {
     position: absolute;
     bottom: 10px;
-    right: 90px;
+    right: 100px;
     background-color: rgba(255, 255, 255, 0.2);
     line-height: 20px;
     padding: 5px 10px;
@@ -818,8 +828,8 @@ const setDefaultAvatar = (e: any) => {
     width: 30px;
     height: 30px;
     position: absolute;
-    right: 10px;
-    bottom: 50px;
+    right: 50px;
+    bottom: 10px;
     cursor: pointer;
   }
 
@@ -827,7 +837,7 @@ const setDefaultAvatar = (e: any) => {
     position: absolute;
     width: 30px;
     height: 30px;
-    right: 50px;
+    right: 10px;
     bottom: 10px;
   }
   .quit {
@@ -878,13 +888,24 @@ const setDefaultAvatar = (e: any) => {
     border-radius: 50%;
   }
 }
-.balance-to-bottom {
+
+.balance-to-left {
   .balance-change {
-    &.win {
-      bottom: -50px !important;
-    }
+    &.win,
     &.lose {
-      bottom: -50px !important;
+      left: -70px;
+      bottom: 11px;
+      right: unset;
+    }
+  }
+}
+.balance-to-right {
+  .balance-change {
+    &.win,
+    &.lose {
+      right: -90px;
+      bottom: 11px;
+      left: unset;
     }
   }
 }
@@ -893,31 +914,21 @@ const setDefaultAvatar = (e: any) => {
   .player-1 {
     top: 10px;
     right: 10px;
-    // left: 50%;
-    // transform: translateX(-50%);
-
-    .countdown {
-      left: 0;
-      margin-left: -10px;
-      animation: countdown-left 1s infinite linear;
-      .remain {
-        position: absolute;
-        bottom: 0;
-        transform: translateY(100%);
-        margin-top: 10px;
-      }
-    }
-    .pokers {
-      bottom: 50%;
-      right: -10px;
-      left: unset;
-      top: unset;
-      transform: translate(100%, 50%);
-    }
+    // .pokers {
+    //   bottom: 50%;
+    //   right: unset;
+    //   left: -10px;
+    //   top: unset;
+    //   transform: translate(-100%, 50%);
+    // }
     .bet {
       bottom: -25px;
     }
-    .balance-to-bottom;
+    .countdown {
+      left: -10px;
+      animation: countdown-left 1s infinite linear !important;
+    }
+    .balance-to-left;
   }
 }
 // 3人房间
@@ -925,27 +936,26 @@ const setDefaultAvatar = (e: any) => {
   .player-1 {
     top: 10px;
     left: 10px;
+    .balance-to-right;
     .countdown {
-      right: 0;
-      margin-right: -10px;
-      animation: countdown-right 1s infinite linear;
+      left: unset !important;
+      right: -10px;
+      animation: countdown-right 1s infinite linear !important;
     }
-    .balance-to-bottom;
   }
   .player-2 {
     top: 10px;
     right: 10px;
     .countdown {
-      left: 0;
-      margin-left: -10px;
-      animation: countdown-left 1s infinite linear;
+      left: -10px;
+      animation: countdown-left 1s infinite linear !important;
     }
     .ready-state {
       right: unset;
       left: 0;
       transform: translate(-130%, -50%);
     }
-    .balance-to-bottom;
+    .balance-to-left;
   }
 }
 // 4人房间
@@ -953,36 +963,16 @@ const setDefaultAvatar = (e: any) => {
   .player-1 {
     top: 10px;
     left: 10px;
-    .countdown {
-      right: 0;
-      margin-right: -10px;
-      animation: countdown-right 1s infinite linear;
-    }
   }
   .player-2 {
     top: 10px;
     left: 50%;
     transform: translateX(-50%);
-    .countdown {
-      left: 0;
-      margin-left: -10px;
-      animation: countdown-left 1s infinite linear;
-      .remain {
-        position: absolute;
-        bottom: 0;
-        transform: translateY(100%);
-        margin-top: 10px;
-      }
-    }
   }
   .player-3 {
     top: 10px;
     right: 10px;
-    .countdown {
-      left: 0;
-      margin-left: -10px;
-      animation: countdown-left 1s infinite linear;
-    }
+
     .ready-state {
       right: unset;
       left: 0;

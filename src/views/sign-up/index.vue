@@ -1,42 +1,42 @@
 <template>
   <div class="login">
     <div class="form_area">
-      <p class="title">Sign Up</p>
+      <p class="title">注册账号</p>
       <form>
         <div class="form_group">
-          <label class="sub_title" for="name">Name</label>
+          <label class="sub_title" for="name">账号</label>
           <input
             v-model="userInfo.username"
-            placeholder="Enter your full name"
+            placeholder="请输入账号"
             class="form_style"
             type="text"
           />
         </div>
         <div class="form_group">
-          <label class="sub_title" for="email">Email</label>
+          <label class="sub_title" for="email">邮箱</label>
           <input
             v-model="userInfo.email"
-            placeholder="Enter your email"
+            placeholder="请输入邮箱"
             id="email"
             class="form_style"
             type="email"
           />
         </div>
         <div class="form_group">
-          <label class="sub_title" for="password">Password</label>
+          <label class="sub_title" for="password">密码</label>
           <input
             autocomplete="off"
             v-model="userInfo.password"
-            placeholder="Enter your password"
+            placeholder="请输入密码"
             id="password"
             class="form_style"
             type="password"
           />
         </div>
         <div>
-          <button class="btn" @click="handleLogin">Sign Up</button>
+          <button class="btn" @click="handleLogin">注册账号</button>
 
-          <p>Has Account? <a class="link" @click="$router.push('/login')">Login Here!</a></p>
+          <p>Has Account? <a class="link" @click="$router.push('/login')">登录账号</a></p>
           <a class="link" href=""> </a>
         </div>
         <a class="link" href=""> </a>
@@ -50,7 +50,7 @@ import { reactive, getCurrentInstance } from 'vue'
 import { signUp } from '@/service/login'
 import { useRouter } from 'vue-router'
 
-const proxy = getCurrentInstance().proxy
+const proxy: any = getCurrentInstance()!.proxy
 
 const userInfo = reactive({
   username: undefined,
@@ -134,6 +134,7 @@ const handleLogin = async () => {
   width: 290px;
   font-size: 15px;
   background: #de5499;
+  color: #fff;
   border-radius: 10px;
   font-weight: 800;
   box-shadow: 3px 3px 0px 0px #e99f4c;

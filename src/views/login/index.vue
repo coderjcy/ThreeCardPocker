@@ -1,34 +1,34 @@
 <template>
   <div class="login">
     <div class="form_area">
-      <p class="title">Login</p>
-      <form action="">
+      <p class="title">登录</p>
+      <form onsubmit="return false">
         <div class="form_group">
-          <label class="sub_title" for="name">Name</label>
+          <label class="sub_title" for="name">账号</label>
           <input
             v-model="userInfo.username"
-            placeholder="Enter your full name"
+            placeholder="请输入账号"
             class="form_style"
             type="text"
           />
         </div>
         <div class="form_group">
-          <label class="sub_title" for="password">Password</label>
+          <label class="sub_title" for="password">密码</label>
           <input
             v-model="userInfo.password"
-            placeholder="Enter your password"
+            placeholder="请输入密码"
             id="password"
             class="form_style"
             type="password"
           />
         </div>
         <div>
-          <button class="btn" @click="handleLogin">Login</button>
+          <button class="btn" @click="handleLogin">登录</button>
           <p>
-            Forget Passwords?
-            <a class="link" @click="$router.push('/reset')">Click here to reset it.!</a>
+            忘记密码?
+            <a class="link" @click="$router.push('/reset')">点击重置密码!</a>
           </p>
-          <p>No Account? <a class="link" @click="$router.push('/sign-up')">Sign Up Here!</a></p>
+          <p>没有账号? <a class="link" @click="$router.push('/sign-up')">去注册!</a></p>
           <a class="link" href=""> </a>
         </div>
         <a class="link" href=""> </a>
@@ -37,14 +37,14 @@
     <a class="link" href=""> </a>
   </div>
 </template>
-<script setup lang="ts">
+<script setup>
 import { reactive, getCurrentInstance } from 'vue'
 import { login } from '@/service/login'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
-import useUserStores from '@/store/user'
+import useUserStore from '@/store/user'
 const proxy = getCurrentInstance().proxy
-const userStore = useUserStores()
+const userStore = useUserStore()
 const userInfo = reactive({
   username: undefined,
   password: undefined
@@ -52,11 +52,9 @@ const userInfo = reactive({
 
 const router = useRouter()
 const handleLogin = async () => {
-  console.log(`output->`, name)
   if (!userInfo.username) return proxy.$message.warning('请输入账号')
   if (!userInfo.password) return proxy.$message.warning('请输入密码')
-  // const isPass = await formRef.validate((v: any) => v)
-  // if (!isPass) return
+
   const res = await login(userInfo)
   localStorage.setItem('token', res.data.token)
   localStorage.setItem('userInfo', JSON.stringify(res.data))
@@ -129,6 +127,8 @@ const handleLogin = async () => {
   width: 290px;
   font-size: 15px;
   background: #de5499;
+  color: #fff;
+
   border-radius: 10px;
   font-weight: 800;
   box-shadow: 3px 3px 0px 0px #e99f4c;
@@ -142,5 +142,8 @@ const handleLogin = async () => {
   font-weight: 800;
   color: #264143;
   padding: 5px;
+}
+a {
+  cursor: pointer;
 }
 </style>
